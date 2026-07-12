@@ -94,6 +94,8 @@ export const BOSS_TYPES = [
 ];
 
 export const BOSS_HORDE_ID = 'boss_horde';
+export const OP_RAINBOW_DRAGON_ID = 'op_rainbow_dragon';
+export const OP_RAINBOW_DRAGON_HEARTS = 1_000_000;
 
 export function getBossHordeHearts() {
   return BOSS_TYPES.reduce((sum, b) => sum + b.maxHearts, 0);
@@ -358,12 +360,21 @@ export function getEquippedCosmetics() {
 }
 
 export function getMobInfo(id = state.mobType) {
-  if (id === BOSS_HORDE_ID || state.bossMode) {
+  if (id === BOSS_HORDE_ID) {
     return {
       id: BOSS_HORDE_ID,
       name: 'BOSS HORDE!!!',
       maxHearts: getBossHordeHearts(),
       boss: true,
+    };
+  }
+  if (id === OP_RAINBOW_DRAGON_ID) {
+    return {
+      id: OP_RAINBOW_DRAGON_ID,
+      name: 'OP RAINBOW ENDER DRAGON',
+      maxHearts: OP_RAINBOW_DRAGON_HEARTS,
+      boss: true,
+      rainbow: true,
     };
   }
   const boss = BOSS_TYPES.find((b) => b.id === id);
@@ -383,8 +394,27 @@ export function startBossBattle() {
   return getMobInfo(BOSS_HORDE_ID);
 }
 
+/** Summon the OP Rainbow Ender Dragon with 1,000,000 hearts. */
+export function startOpRainbowDragonBattle() {
+  state.bossMode = true;
+  state.mobType = OP_RAINBOW_DRAGON_ID;
+  state.mobHearts = OP_RAINBOW_DRAGON_HEARTS;
+  state.mobMaxHearts = OP_RAINBOW_DRAGON_HEARTS;
+  state.mobScale = 1.85;
+  save();
+  return getMobInfo(OP_RAINBOW_DRAGON_ID);
+}
+
 export function isBossMode() {
-  return Boolean(state.bossMode) || state.mobType === BOSS_HORDE_ID;
+  return (
+    Boolean(state.bossMode)
+    || state.mobType === BOSS_HORDE_ID
+    || state.mobType === OP_RAINBOW_DRAGON_ID
+  );
+}
+
+export function isOpRainbowDragon() {
+  return state.mobType === OP_RAINBOW_DRAGON_ID;
 }
 
 export function getBiome() {
@@ -448,7 +478,9 @@ export function recordCorrect() {
   }
 
   const prevMob = state.mobType;
-  const wasBoss = Boolean(state.bossMode) || prevMob === BOSS_HORDE_ID;
+  const wasBoss = Boolean(state.bossMode)
+    || prevMob === BOSS_HORDE_ID
+    || prevMob === OP_RAINBOW_DRAGON_ID;
   state.mobHearts = Math.max(0, state.mobHearts - damage);
   const mobDefeated = state.mobHearts <= 0;
   let newMobIntro = false;

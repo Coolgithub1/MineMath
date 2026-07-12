@@ -523,8 +523,32 @@ body {
   position: relative;
   z-index: 3;
   display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.55rem;
   justify-content: center;
   padding: 0.35rem 1rem 0.75rem;
+}
+
+.dragon-op-btn {
+  min-height: 120px !important;
+  font-size: 1.95rem !important;
+  box-shadow:
+    inset -4px -4px 0 rgba(0, 0, 0, 0.28),
+    inset 4px 4px 0 rgba(255, 255, 255, 0.5),
+    0 0 0 5px #111,
+    0 10px 0 rgba(0, 0, 0, 0.35),
+    0 0 36px rgba(201, 182, 255, 0.85),
+    0 0 60px rgba(255, 77, 109, 0.65),
+    0 0 80px rgba(255, 229, 102, 0.45) !important;
+  animation: opRainbowShift 1.3s linear infinite, bossMegaPulse 0.75s ease-in-out infinite !important;
+}
+
+.battle-arena.dragon-op-mode {
+  box-shadow:
+    0 0 0 5px #111,
+    0 0 40px rgba(201, 182, 255, 0.7),
+    0 0 70px rgba(255, 77, 109, 0.5) !important;
 }
 
 .boss-battle-btn,

@@ -339,49 +339,118 @@ function drawHerobrine(ctx, cx, baseY, depth, hurt, pose) {
   ctx.restore();
 }
 
-function drawEnderDragon(ctx, cx, baseY, depth, hurt, pose) {
-  const body = hurt ? '#6a3060' : '#1A0A2A';
-  const wing = hurt ? '#a05090' : '#4A2A6A';
+function drawEnderDragon(ctx, cx, baseY, depth, hurt, pose, rainbow = false) {
+  const hue = rainbow ? (performance.now() / 10) % 360 : 0;
+  const rainbowHex = (h, sat = 75, light = 48) => {
+    const hh = ((h % 360) + 360) % 360;
+    const s = sat / 100;
+    const l = light / 100;
+    const c = (1 - Math.abs(2 * l - 1)) * s;
+    const x = c * (1 - Math.abs(((hh / 60) % 2) - 1));
+    const m = l - c / 2;
+    let r = 0;
+    let g = 0;
+    let b = 0;
+    if (hh < 60) [r, g, b] = [c, x, 0];
+    else if (hh < 120) [r, g, b] = [x, c, 0];
+    else if (hh < 180) [r, g, b] = [0, c, x];
+    else if (hh < 240) [r, g, b] = [0, x, c];
+    else if (hh < 300) [r, g, b] = [x, 0, c];
+    else [r, g, b] = [c, 0, x];
+    const to = (n) => Math.round((n + m) * 255).toString(16).padStart(2, '0');
+    return `#${to(r)}${to(g)}${to(b)}`;
+  };
+
+  const body = hurt
+    ? '#6a3060'
+    : rainbow
+      ? rainbowHex(hue, 80, 42)
+      : '#1A0A2A';
+  const wing = hurt
+    ? '#a05090'
+    : rainbow
+      ? rainbowHex(hue + 80, 85, 55)
+      : '#4A2A6A';
+  const wing2 = rainbow ? rainbowHex(hue + 160, 90, 58) : wing;
+  const eye = rainbow ? rainbowHex(hue + 200, 95, 65) : '#E74C3C';
   const {
     armL = 0, armR = 0, headTilt = 0, headBob = 0, bob = 0, jump = 0,
   } = pose;
   const flap = Math.sin((armL + armR + bob) * 2) * 0.5;
+
+  if (rainbow) {
+    ctx.save();
+    ctx.shadowColor = rainbowHex(hue, 90, 60);
+    ctx.shadowBlur = 22;
+    for (let i = 0; i < 10; i += 1) {
+      const a = (i / 10) * Math.PI * 2 + hue * 0.02;
+      const rr = 55 + Math.sin(hue * 0.04 + i) * 12;
+      ctx.fillStyle = rainbowHex(hue + i * 36, 95, 65);
+      ctx.globalAlpha = 0.55;
+      ctx.beginPath();
+      ctx.arc(cx + Math.cos(a) * rr, baseY - 90 + Math.sin(a) * 28, 4, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+
   // Wings
   ctx.fillStyle = wing;
+  if (rainbow) {
+    ctx.shadowColor = wing;
+    ctx.shadowBlur = 16;
+  }
   ctx.beginPath();
   ctx.moveTo(cx - 10, baseY - 90);
-  ctx.lineTo(cx - 90, baseY - 110 - flap * 40 - jump);
+  ctx.lineTo(cx - 100, baseY - 120 - flap * 45 - jump);
   ctx.lineTo(cx - 20, baseY - 70);
   ctx.closePath();
   ctx.fill();
+  ctx.fillStyle = wing2;
   ctx.beginPath();
   ctx.moveTo(cx + 10, baseY - 90);
-  ctx.lineTo(cx + 90, baseY - 110 + flap * 40 - jump);
+  ctx.lineTo(cx + 100, baseY - 120 + flap * 45 - jump);
   ctx.lineTo(cx + 20, baseY - 70);
   ctx.closePath();
   ctx.fill();
+  ctx.shadowBlur = 0;
+
   // Body + neck
-  drawBox(ctx, cx - 28, baseY - 70, 56, 40, depth + 4, body, '#0A0010', '#2A1A3A');
-  drawBox(ctx, cx - 10, baseY - 110, 20, 40, depth, body, '#0A0010', '#2A1A3A');
-  const headY = baseY - 140 + headBob;
+  const side = rainbow ? rainbowHex(hue + 40, 70, 30) : '#0A0010';
+  const top = rainbow ? rainbowHex(hue + 120, 85, 62) : '#2A1A3A';
+  drawBox(ctx, cx - 30, baseY - 72, 60, 44, depth + 4, body, side, top);
+  drawBox(ctx, cx - 12, baseY - 115, 24, 44, depth, body, side, top);
+  const headY = baseY - 148 + headBob;
   ctx.save();
   ctx.translate(cx, headY + 16);
   ctx.rotate(headTilt);
   ctx.translate(-cx, -(headY + 16));
-  drawBox(ctx, cx - 22, headY, 44, 32, depth + 2, body, '#0A0010', '#2A1A3A');
-  ctx.fillStyle = '#E74C3C';
-  ctx.shadowColor = '#ff4040';
-  ctx.shadowBlur = 10;
-  ctx.fillRect(cx - 14, headY + 12, 12, 6);
-  ctx.fillRect(cx + 4, headY + 12, 12, 6);
+  drawBox(ctx, cx - 24, headY, 48, 34, depth + 2, body, side, top);
+  ctx.fillStyle = eye;
+  ctx.shadowColor = eye;
+  ctx.shadowBlur = rainbow ? 16 : 10;
+  ctx.fillRect(cx - 16, headY + 12, 14, 7);
+  ctx.fillRect(cx + 4, headY + 12, 14, 7);
   ctx.shadowBlur = 0;
-  ctx.fillStyle = '#C9B6FF';
-  ctx.fillRect(cx - 4, headY + 22, 10, 6);
+  ctx.fillStyle = rainbow ? '#fff' : '#C9B6FF';
+  ctx.fillRect(cx - 5, headY + 24, 12, 6);
   ctx.restore();
   // Tail
   ctx.fillStyle = body;
   ctx.fillRect(cx - 6, baseY - 30, 12, 28);
-  ctx.fillRect(cx + 4, baseY - 8, 18, 10);
+  ctx.fillStyle = rainbow ? wing2 : body;
+  ctx.fillRect(cx + 4, baseY - 8, 22, 12);
+
+  if (rainbow) {
+    ctx.save();
+    ctx.font = 'bold 12px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#FFE566';
+    ctx.shadowColor = '#FF4D6D';
+    ctx.shadowBlur = 10;
+    ctx.fillText('OP RAINBOW DRAGON', cx, baseY - 165);
+    ctx.restore();
+  }
 }
 
 function drawWarden(ctx, cx, baseY, depth, hurt, pose, superMode = false) {
@@ -551,7 +620,8 @@ function drawMobBody(ctx, mobType, cx, baseY, depth, hurt, pose) {
   else if (mobType === 'wither_skel') drawWitherSkel(ctx, cx, baseY, depth, hurt, pose);
   else if (mobType === 'giant') drawGiant(ctx, cx, baseY, depth, hurt, pose);
   else if (mobType === 'herobrine') drawHerobrine(ctx, cx, baseY, depth, hurt, pose);
-  else if (mobType === 'ender_dragon') drawEnderDragon(ctx, cx, baseY, depth, hurt, pose);
+  else if (mobType === 'ender_dragon') drawEnderDragon(ctx, cx, baseY, depth, hurt, pose, false);
+  else if (mobType === 'op_rainbow_dragon') drawEnderDragon(ctx, cx, baseY, depth, hurt, pose, true);
   else if (mobType === 'warden') drawWarden(ctx, cx, baseY, depth, hurt, pose, false);
   else if (mobType === 'super_warden') drawWarden(ctx, cx, baseY, depth, hurt, pose, true);
   else if (mobType === 'blaze') drawBlaze(ctx, cx, baseY, depth, hurt, pose);

@@ -325,7 +325,7 @@ export async function playBattleSequence(opts) {
       await counterEnderman(ctx);
     } else if (mobType === 'skeleton' || mobType === 'wither_skel' || mobType === 'wither' || mobType === 'blaze') {
       await counterSkeleton(ctx);
-    } else if (mobType === 'boss_horde' || mobType === 'warden' || mobType === 'super_warden' || mobType === 'ender_dragon') {
+    } else if (mobType === 'boss_horde' || mobType === 'warden' || mobType === 'super_warden' || mobType === 'ender_dragon' || mobType === 'op_rainbow_dragon') {
       await counterDefault(ctx);
     } else {
       await counterDefault(ctx);

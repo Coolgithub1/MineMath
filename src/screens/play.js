@@ -8,6 +8,7 @@ import {
   getEquationIndex,
   getPlayerMaxHearts,
   isBossMode,
+  isOpRainbowDragon,
   subscribe,
   recordCorrect,
   recordWrong,
@@ -194,7 +195,9 @@ export function createPlayScreen(root, hooks) {
         root.querySelector('#battle-arena')?.classList.toggle('boss-mode', isBossMode());
         setFeedback(
           result.bossDefeated
-            ? '⚔️ BOSS HORDE DEFEATED!!! Absolute legend!'
+            ? (result.prevMob === 'op_rainbow_dragon'
+              ? '🌈🐉 OP RAINBOW ENDER DRAGON DEFEATED!!! UNBELIEVABLE!!!'
+              : '⚔️ BOSS HORDE DEFEATED!!! Absolute legend!')
             : result.oneShot
               ? `🌈 ONE SHOT!! ${mob.name} deleted! A bigger foe appears!`
               : `Mob defeated!${result.usedDoubleHit ? ' DOUBLE HIT!' : ''} A bigger ${mob.name} appears!`,
@@ -352,13 +355,29 @@ export function syncHud(root) {
   if (mobName) mobName.textContent = mob.name;
   const mobStatus = root.querySelector('#mob-status');
   if (mobStatus) {
-    mobStatus.textContent = isBossMode()
-      ? `${s.mobHearts}/${s.mobMaxHearts} HP · 7 BOSSES`
-      : `${s.mobHearts}/${s.mobMaxHearts} hearts`;
+    if (isOpRainbowDragon()) {
+      mobStatus.textContent = `${s.mobHearts.toLocaleString()} / 1,000,000 HP`;
+    } else if (isBossMode()) {
+      mobStatus.textContent = `${s.mobHearts}/${s.mobMaxHearts} HP · 7 BOSSES`;
+    } else {
+      mobStatus.textContent = `${s.mobHearts}/${s.mobMaxHearts} hearts`;
+    }
   }
 
-  root.querySelector('#battle-arena')?.classList.toggle('boss-mode', isBossMode());
+  const arena = root.querySelector('#battle-arena');
+  arena?.classList.toggle('boss-mode', isBossMode());
+  arena?.classList.toggle('dragon-op-mode', isOpRainbowDragon());
 
   renderHearts(root.querySelector('#player-hearts'), s.playerHearts, getPlayerMaxHearts(), 'heart-full');
-  renderHearts(root.querySelector('#mob-hearts'), s.mobHearts, s.mobMaxHearts, 'heart-mob');
+  // Don't try to draw a million heart icons
+  const mobHeartMax = isOpRainbowDragon() ? Math.min(20, s.mobMaxHearts) : s.mobMaxHearts;
+  const mobHeartCur = isOpRainbowDragon()
+    ? Math.max(1, Math.ceil((s.mobHearts / s.mobMaxHearts) * 20))
+    : s.mobHearts;
+  renderHearts(
+    root.querySelector('#mob-hearts'),
+    isOpRainbowDragon() ? (s.mobHearts > 0 ? mobHeartCur : 0) : s.mobHearts,
+    mobHeartMax,
+    'heart-mob',
+  );
 }

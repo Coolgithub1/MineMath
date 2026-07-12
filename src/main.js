@@ -9,6 +9,7 @@ import {
   equipOpRainbowSword,
   equipOpRainbowArmor,
   startBossBattle,
+  startOpRainbowDragonBattle,
   isBossMode,
 } from './game/state.js';
 import { unlockAudio, playClick, playPartyPop, startAmbient, playStreakFanfare, playParrotSquawk, setAmbientBiome, playEquip } from './game/audio.js';
@@ -88,6 +89,10 @@ app.innerHTML = `
     <button type="button" class="mc-btn op-rainbow-btn boss-battle-btn boss-battle-btn--mega" id="boss-battle-btn" title="Summon EVERY boss at once!">
       <span class="op-rainbow-label boss-battle-mega-label">🌈⚔️ BOSS BATTLE ⚔️🌈</span>
       <span class="boss-battle-sub">Summon Herobrine · Dragon · Wardens · Blaze · Wither · Lion</span>
+    </button>
+    <button type="button" class="mc-btn op-rainbow-btn boss-battle-btn boss-battle-btn--mega dragon-op-btn" id="op-dragon-btn" title="Summon the OP Rainbow Ender Dragon — 1,000,000 hearts!!!">
+      <span class="op-rainbow-label boss-battle-mega-label">🌈🐉 OP RAINBOW ENDER DRAGON 🐉🌈</span>
+      <span class="boss-battle-sub">1,000,000 HEARTS · Ultimate dragon battle!!!</span>
     </button>
   </div>
 
@@ -423,6 +428,28 @@ app.querySelector('#boss-battle-btn').addEventListener('click', async () => {
   const feedback = app.querySelector('#feedback');
   if (feedback) {
     feedback.textContent = '⚔️ BOSS HORDE summoned — Herobrine, Dragon, Wardens, Blaze, Wither & Lion!!!';
+    feedback.className = 'feedback bonus';
+  }
+});
+
+app.querySelector('#op-dragon-btn').addEventListener('click', async () => {
+  await unlockAudio();
+  playClick();
+  playPartyPop();
+  const boss = startOpRainbowDragonBattle();
+  app.querySelector('#battle-arena')?.classList.add('boss-mode', 'dragon-op-mode');
+  mobAnimator.redraw();
+  syncHud(app);
+  flashArena('hit');
+  burstFromEl(app.querySelector('#mob-canvas'), {
+    count: 50,
+    kinds: ['star', 'spark', 'diamond', 'heart', 'emerald'],
+    spread: 200,
+  });
+  await showBossIntro(boss.name);
+  const feedback = app.querySelector('#feedback');
+  if (feedback) {
+    feedback.textContent = '🌈🐉 OP RAINBOW ENDER DRAGON — 1,000,000 HEARTS!!! Good luck!!!';
     feedback.className = 'feedback bonus';
   }
 });
