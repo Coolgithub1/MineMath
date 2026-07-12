@@ -34,13 +34,19 @@ export function createShop(root, { onClose, onEquip, onReset }) {
         disabled = false;
         cls = 'primary';
       }
+      const dmgLabel = weapon.oneShot || !Number.isFinite(weapon.damage)
+        ? '∞ ONE SHOT'
+        : `${weapon.damage} damage`;
+      const unlockHint = weapon.cheat
+        ? 'Tap the rainbow OP button!'
+        : 'Unlock by answering correctly!';
       item.innerHTML = `
         <div class="sword-swatch" aria-hidden="true">
           <span style="background:${weapon.color}; box-shadow: 2px 0 0 ${weapon.tip}"></span>
         </div>
         <div class="shop-item-info">
           <h3>${weapon.name}</h3>
-          <p>${owned ? (equipped ? `${weapon.damage} damage — ready!` : 'Unlocked!') : 'Unlock by answering correctly!'}</p>
+          <p>${owned ? (equipped ? `${dmgLabel} — ready!` : 'Unlocked!') : unlockHint}</p>
         </div>
         <button type="button" class="mc-btn ${cls}" ${disabled ? 'disabled' : ''}>${label}</button>
       `;

@@ -57,7 +57,7 @@ export function createRewardScreen(root, { onUnlocked }) {
           <span style="background:${color}; box-shadow: 2px 0 0 ${tip}"></span>
         </div>
         <div class="reward-name">${item.name}</div>
-        <div class="reward-meta">${item.damage} damage</div>
+        <div class="reward-meta">${item.oneShot || !Number.isFinite(item.damage) ? '∞ ONE SHOT' : `${item.damage} damage`}</div>
       `;
     } else {
       card.innerHTML = `

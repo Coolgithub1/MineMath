@@ -6,8 +6,9 @@ import {
   subscribe,
   toggleMute,
   resetProgress,
+  equipOpRainbowSword,
 } from './game/state.js';
-import { unlockAudio, playClick, playPartyPop, startAmbient, playStreakFanfare, playParrotSquawk, setAmbientBiome } from './game/audio.js';
+import { unlockAudio, playClick, playPartyPop, startAmbient, playStreakFanfare, playParrotSquawk, setAmbientBiome, playEquip } from './game/audio.js';
 import { createCharacterAnimator } from './render/character.js';
 import { createMobAnimator } from './render/mob.js';
 import { createPlayScreen, syncHud } from './screens/play.js';
@@ -66,6 +67,9 @@ app.innerHTML = `
       </div>
     </div>
     <div class="hud-actions">
+      <button type="button" class="mc-btn op-rainbow-btn" id="op-sword-btn" title="Equip the OP Rainbow Sword — one-shot every mob!">
+        <span class="op-rainbow-label">🌈 OP SWORD</span>
+      </button>
       <button type="button" class="mc-btn" id="mute-btn">Sound: On</button>
       <button type="button" class="mc-btn" id="questions-btn">Questions</button>
       <button type="button" class="mc-btn" id="sticker-btn">Stickers</button>
@@ -340,6 +344,29 @@ app.querySelector('#questions-btn').addEventListener('click', async () => {
   await unlockAudio();
   playClick();
   questionsEditor.open();
+});
+
+app.querySelector('#op-sword-btn').addEventListener('click', async () => {
+  await unlockAudio();
+  playClick();
+  const result = equipOpRainbowSword();
+  if (!result.ok) return;
+  playEquip();
+  playPartyPop();
+  animator.equipFlash();
+  animator.redraw();
+  syncHud(app);
+  celebrateCorrect({ streak: getState().streak || 1 });
+  burstFromEl(app.querySelector('#character-canvas'), {
+    count: 28,
+    kinds: ['star', 'spark', 'diamond', 'heart', 'emerald'],
+    spread: 150,
+  });
+  const feedback = app.querySelector('#feedback');
+  if (feedback) {
+    feedback.textContent = '🌈 OP Rainbow Sword equipped — ONE SHOT every mob!!';
+    feedback.className = 'feedback bonus';
+  }
 });
 
 app.querySelector('#sticker-btn').addEventListener('click', async () => {

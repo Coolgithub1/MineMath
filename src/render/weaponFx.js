@@ -18,6 +18,16 @@ export function weaponFxProfile(weapon) {
   const e = weapon?.edge || c;
   const t = weapon?.tip || c;
 
+  if (id === 'op_rainbow' || weapon?.oneShot) {
+    return {
+      colors: ['#FF4D6D', '#FF8C20', '#FFE566', '#7DFFB0', '#6EB5FF', '#C9B6FF', '#fff'],
+      shapes: ['star', 'orb', 'spark', 'diamond'],
+      glow: true,
+      gravity: -0.1,
+      speed: 1.8,
+      idleRate: 4.5,
+    };
+  }
   if (style === 'staff' || id === 'blaze_staff') {
     return {
       colors: [e, c, '#fff', '#FFD080', t],

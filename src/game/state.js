@@ -19,6 +19,19 @@ export const WEAPONS = [
   { id: 'netherite', name: 'Netherite Sword', cost: 110, color: '#4A3A3A', edge: '#8A7A6A', tip: '#2A1A1A', damage: 3, style: 'sword' },
   { id: 'trident', name: 'Trident', cost: 130, color: '#5AB0C8', edge: '#A8E8F8', tip: '#2A6070', damage: 3, style: 'trident' },
   { id: 'blaze_staff', name: 'Blaze Staff', cost: 150, color: '#FF8C20', edge: '#FFD080', tip: '#8B3A00', damage: 4, style: 'staff', glow: true },
+  {
+    id: 'op_rainbow',
+    name: 'OP Rainbow Sword',
+    cost: 0,
+    color: '#FF4D6D',
+    edge: '#FFE566',
+    tip: '#4AEDD9',
+    damage: Infinity,
+    style: 'sword',
+    glow: true,
+    oneShot: true,
+    cheat: true,
+  },
 ];
 
 /** Back-compat alias */
@@ -337,7 +350,10 @@ export function recordCorrect() {
 
   let damage = getWeapon().damage || 1;
   let usedDoubleHit = false;
-  if ((state.doubleHitCharges || 0) > 0) {
+  let oneShot = Boolean(getWeapon().oneShot) || !Number.isFinite(damage);
+  if (oneShot) {
+    damage = state.mobHearts; // wipe all remaining hearts
+  } else if ((state.doubleHitCharges || 0) > 0) {
     damage *= 2;
     state.doubleHitCharges -= 1;
     usedDoubleHit = true;
@@ -366,6 +382,7 @@ export function recordCorrect() {
     tierUnlocked,
     damage,
     usedDoubleHit,
+    oneShot,
     mobDefeated,
     newMobIntro,
     prevMob,
@@ -413,10 +430,10 @@ function shuffle(arr) {
   return copy;
 }
 
-/** Locked weapons + cosmetics (no free "none" items). */
+/** Locked weapons + cosmetics (no free "none" items). Cheat/OP weapons are button-only. */
 export function getLockedRewards() {
   const weapons = WEAPONS
-    .filter((w) => !state.ownedWeapons.includes(w.id))
+    .filter((w) => !w.cheat && !state.ownedWeapons.includes(w.id))
     .map((item) => ({ type: 'weapon', item }));
   const cosmetics = COSMETICS
     .filter((c) => c.kind !== 'none' && !state.ownedCosmetics.includes(c.id))
@@ -505,6 +522,17 @@ export function equipSword(id) {
   state.equipped = id;
   save();
   return true;
+}
+
+/** Instant unlock + equip the OP one-shot rainbow sword. */
+export function equipOpRainbowSword() {
+  const id = 'op_rainbow';
+  const weapon = WEAPONS.find((w) => w.id === id);
+  if (!weapon) return { ok: false };
+  if (!state.ownedWeapons.includes(id)) state.ownedWeapons.push(id);
+  state.equipped = id;
+  save();
+  return { ok: true, item: weapon };
 }
 
 export function setMuted(muted) {

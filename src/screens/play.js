@@ -191,12 +191,16 @@ export function createPlayScreen(root, hooks) {
         playMobDefeat();
         const mob = getMobInfo(result.mobType);
         setFeedback(
-          `Mob defeated!${result.usedDoubleHit ? ' DOUBLE HIT!' : ''} A bigger ${mob.name} appears!`,
+          result.oneShot
+            ? `🌈 ONE SHOT!! ${mob.name} deleted! A bigger foe appears!`
+            : `Mob defeated!${result.usedDoubleHit ? ' DOUBLE HIT!' : ''} A bigger ${mob.name} appears!`,
           'feedback bonus',
         );
       } else {
         setFeedback(
-          `BONK! Mob lost ${result.damage} heart${result.damage > 1 ? 's' : ''}!${result.usedDoubleHit ? ' Double hit!' : ''} Pick a prize!`,
+          result.oneShot
+            ? '🌈 ONE SHOT!! Mob deleted! Pick a prize!'
+            : `BONK! Mob lost ${result.damage} heart${result.damage > 1 ? 's' : ''}!${result.usedDoubleHit ? ' Double hit!' : ''} Pick a prize!`,
           'feedback correct',
         );
       }
