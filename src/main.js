@@ -77,6 +77,9 @@ app.innerHTML = `
       <button type="button" class="mc-btn op-rainbow-btn op-rainbow-btn--armor" id="op-armor-btn" title="Equip Rainbow Shining Armor — +3 hearts forever!">
         <span class="op-rainbow-label">🛡️ OP ARMOR</span>
       </button>
+      <button type="button" class="mc-btn op-rainbow-btn dragon-hud-btn" id="op-dragon-hud-btn" title="Summon OP Rainbow Ender Dragon — 1,000,000 hearts!!!">
+        <span class="op-rainbow-label">🐉 OP DRAGON</span>
+      </button>
       <button type="button" class="mc-btn" id="mute-btn">Sound: On</button>
       <button type="button" class="mc-btn" id="questions-btn">Questions</button>
       <button type="button" class="mc-btn" id="sticker-btn">Stickers</button>
@@ -432,7 +435,7 @@ app.querySelector('#boss-battle-btn').addEventListener('click', async () => {
   }
 });
 
-app.querySelector('#op-dragon-btn').addEventListener('click', async () => {
+async function summonOpRainbowDragon() {
   await unlockAudio();
   playClick();
   playPartyPop();
@@ -452,7 +455,10 @@ app.querySelector('#op-dragon-btn').addEventListener('click', async () => {
     feedback.textContent = '🌈🐉 OP RAINBOW ENDER DRAGON — 1,000,000 HEARTS!!! Good luck!!!';
     feedback.className = 'feedback bonus';
   }
-});
+}
+
+app.querySelector('#op-dragon-btn')?.addEventListener('click', summonOpRainbowDragon);
+app.querySelector('#op-dragon-hud-btn')?.addEventListener('click', summonOpRainbowDragon);
 
 app.querySelector('#sticker-btn').addEventListener('click', async () => {
   await unlockAudio();

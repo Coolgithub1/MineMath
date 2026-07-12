@@ -64,7 +64,8 @@ body {
       var(--dirt-dark) 100%
     );
   position: relative;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
 /* Pixel dirt / grass texture strip */
@@ -542,6 +543,23 @@ body {
     0 0 60px rgba(255, 77, 109, 0.65),
     0 0 80px rgba(255, 229, 102, 0.45) !important;
   animation: opRainbowShift 1.3s linear infinite, bossMegaPulse 0.75s ease-in-out infinite !important;
+}
+
+.dragon-hud-btn {
+  min-height: 70px;
+  font-size: 1.25rem !important;
+  animation: opRainbowShift 1.5s linear infinite, opRainbowPulse 0.85s ease-in-out infinite !important;
+  box-shadow:
+    inset -3px -3px 0 rgba(0, 0, 0, 0.25),
+    inset 3px 3px 0 rgba(255, 255, 255, 0.45),
+    0 0 0 3px #111,
+    0 0 22px rgba(201, 182, 255, 0.8),
+    0 0 34px rgba(255, 77, 109, 0.55) !important;
+}
+
+.boss-battle-mega-label {
+  white-space: normal !important;
+  text-align: center;
 }
 
 .battle-arena.dragon-op-mode {
