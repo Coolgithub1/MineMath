@@ -7,6 +7,7 @@ import {
   getCustomEquations,
   getEquationIndex,
   getPlayerMaxHearts,
+  isBossMode,
   subscribe,
   recordCorrect,
   recordWrong,
@@ -190,10 +191,13 @@ export function createPlayScreen(root, hooks) {
       } else if (result.mobDefeated) {
         playMobDefeat();
         const mob = getMobInfo(result.mobType);
+        root.querySelector('#battle-arena')?.classList.toggle('boss-mode', isBossMode());
         setFeedback(
-          result.oneShot
-            ? `🌈 ONE SHOT!! ${mob.name} deleted! A bigger foe appears!`
-            : `Mob defeated!${result.usedDoubleHit ? ' DOUBLE HIT!' : ''} A bigger ${mob.name} appears!`,
+          result.bossDefeated
+            ? '⚔️ BOSS HORDE DEFEATED!!! Absolute legend!'
+            : result.oneShot
+              ? `🌈 ONE SHOT!! ${mob.name} deleted! A bigger foe appears!`
+              : `Mob defeated!${result.usedDoubleHit ? ' DOUBLE HIT!' : ''} A bigger ${mob.name} appears!`,
           'feedback bonus',
         );
       } else {
@@ -348,8 +352,12 @@ export function syncHud(root) {
   if (mobName) mobName.textContent = mob.name;
   const mobStatus = root.querySelector('#mob-status');
   if (mobStatus) {
-    mobStatus.textContent = `${s.mobHearts}/${s.mobMaxHearts} hearts`;
+    mobStatus.textContent = isBossMode()
+      ? `${s.mobHearts}/${s.mobMaxHearts} HP · 7 BOSSES`
+      : `${s.mobHearts}/${s.mobMaxHearts} hearts`;
   }
+
+  root.querySelector('#battle-arena')?.classList.toggle('boss-mode', isBossMode());
 
   renderHearts(root.querySelector('#player-hearts'), s.playerHearts, getPlayerMaxHearts(), 'heart-full');
   renderHearts(root.querySelector('#mob-hearts'), s.mobHearts, s.mobMaxHearts, 'heart-mob');

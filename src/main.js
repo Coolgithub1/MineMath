@@ -7,6 +7,9 @@ import {
   toggleMute,
   resetProgress,
   equipOpRainbowSword,
+  equipOpRainbowArmor,
+  startBossBattle,
+  isBossMode,
 } from './game/state.js';
 import { unlockAudio, playClick, playPartyPop, startAmbient, playStreakFanfare, playParrotSquawk, setAmbientBiome, playEquip } from './game/audio.js';
 import { createCharacterAnimator } from './render/character.js';
@@ -17,7 +20,7 @@ import { createRewardScreen } from './screens/reward.js';
 import { createQuestionsEditor } from './screens/questions.js';
 import { burstFromEl, flashArena, celebrateCorrect } from './game/fx.js';
 import { playBattleSequence } from './game/battle.js';
-import { createStickerBook, applyBiome } from './game/stim.js';
+import { createStickerBook, applyBiome, showBossIntro } from './game/stim.js';
 
 const app = document.querySelector('#app');
 
@@ -70,6 +73,9 @@ app.innerHTML = `
       <button type="button" class="mc-btn op-rainbow-btn" id="op-sword-btn" title="Equip the OP Rainbow Sword — one-shot every mob!">
         <span class="op-rainbow-label">🌈 OP SWORD</span>
       </button>
+      <button type="button" class="mc-btn op-rainbow-btn op-rainbow-btn--armor" id="op-armor-btn" title="Equip Rainbow Shining Armor — +3 hearts forever!">
+        <span class="op-rainbow-label">🛡️ OP ARMOR</span>
+      </button>
       <button type="button" class="mc-btn" id="mute-btn">Sound: On</button>
       <button type="button" class="mc-btn" id="questions-btn">Questions</button>
       <button type="button" class="mc-btn" id="sticker-btn">Stickers</button>
@@ -77,6 +83,13 @@ app.innerHTML = `
       <button type="button" class="mc-btn danger" id="restart-btn">Restart</button>
     </div>
   </header>
+
+  <div class="boss-battle-bar">
+    <button type="button" class="mc-btn op-rainbow-btn boss-battle-btn boss-battle-btn--mega" id="boss-battle-btn" title="Summon EVERY boss at once!">
+      <span class="op-rainbow-label boss-battle-mega-label">🌈⚔️ BOSS BATTLE ⚔️🌈</span>
+      <span class="boss-battle-sub">Summon Herobrine · Dragon · Wardens · Blaze · Wither · Lion</span>
+    </button>
+  </div>
 
   <div class="battle-arena mc-border" id="battle-arena">
     <div class="fighter player-fighter">
@@ -90,7 +103,7 @@ app.innerHTML = `
     <div class="fighter mob-fighter">
       <div class="fighter-label" id="mob-name">Zombie</div>
       <div class="hearts" id="mob-hearts" aria-label="Mob hearts"></div>
-      <canvas id="mob-canvas" width="240" height="300" aria-label="Enemy mob"></canvas>
+      <canvas id="mob-canvas" width="420" height="360" aria-label="Enemy mob"></canvas>
       <div class="equipped-label" id="mob-status">Enemy</div>
     </div>
   </div>
@@ -365,6 +378,51 @@ app.querySelector('#op-sword-btn').addEventListener('click', async () => {
   const feedback = app.querySelector('#feedback');
   if (feedback) {
     feedback.textContent = '🌈 OP Rainbow Sword equipped — ONE SHOT every mob!!';
+    feedback.className = 'feedback bonus';
+  }
+});
+
+app.querySelector('#op-armor-btn').addEventListener('click', async () => {
+  await unlockAudio();
+  playClick();
+  const result = equipOpRainbowArmor();
+  if (!result.ok) return;
+  playEquip();
+  playPartyPop();
+  animator.equipFlash();
+  animator.redraw();
+  syncHud(app);
+  celebrateCorrect({ streak: getState().streak || 1 });
+  burstFromEl(app.querySelector('#character-canvas'), {
+    count: 32,
+    kinds: ['star', 'spark', 'diamond', 'heart', 'emerald'],
+    spread: 160,
+  });
+  const feedback = app.querySelector('#feedback');
+  if (feedback) {
+    feedback.textContent = '🛡️ Rainbow Shining Armor ON — +3 hearts and rainbow glow!!';
+    feedback.className = 'feedback bonus';
+  }
+});
+
+app.querySelector('#boss-battle-btn').addEventListener('click', async () => {
+  await unlockAudio();
+  playClick();
+  playPartyPop();
+  const boss = startBossBattle();
+  app.querySelector('#battle-arena')?.classList.add('boss-mode');
+  mobAnimator.redraw();
+  syncHud(app);
+  flashArena('hit');
+  burstFromEl(app.querySelector('#mob-canvas'), {
+    count: 40,
+    kinds: ['star', 'spark', 'diamond', 'heart', 'emerald'],
+    spread: 180,
+  });
+  await showBossIntro(boss.name);
+  const feedback = app.querySelector('#feedback');
+  if (feedback) {
+    feedback.textContent = '⚔️ BOSS HORDE summoned — Herobrine, Dragon, Wardens, Blaze, Wither & Lion!!!';
     feedback.className = 'feedback bonus';
   }
 });

@@ -68,6 +68,7 @@ export const COSMETICS = [
     glow: true,
     rainbow: true,
     extraHearts: 3,
+    cheat: true,
   },
 ];
 
@@ -80,6 +81,23 @@ export const MOB_TYPES = [
   { id: 'wither_skel', name: 'Wither Skeleton', maxHearts: 12, minTier: 3 },
   { id: 'giant', name: 'Giant Zombie', maxHearts: 16, minTier: 3 },
 ];
+
+/** Crazy boss summons — only via Boss Battle button. */
+export const BOSS_TYPES = [
+  { id: 'herobrine', name: 'Herobrine', maxHearts: 45 },
+  { id: 'ender_dragon', name: 'Ender Dragon', maxHearts: 55 },
+  { id: 'warden', name: 'Warden', maxHearts: 50 },
+  { id: 'super_warden', name: 'Super Warden', maxHearts: 70 },
+  { id: 'blaze', name: 'Blaze', maxHearts: 35 },
+  { id: 'wither', name: 'Wither', maxHearts: 60 },
+  { id: 'lion', name: 'Lion', maxHearts: 40 },
+];
+
+export const BOSS_HORDE_ID = 'boss_horde';
+
+export function getBossHordeHearts() {
+  return BOSS_TYPES.reduce((sum, b) => sum + b.maxHearts, 0);
+}
 
 /** @type {{ a: number, b: number, op: '+'|'-' }[]} */
 const DEFAULT_EQUATIONS_SEED = DEFAULT_EQUATIONS;
@@ -109,6 +127,7 @@ const DEFAULT_STATE = {
   shieldCharges: 0,
   stickers: [],
   biome: 'plains',
+  bossMode: false,
 };
 
 function availableMobs(tier) {
@@ -127,6 +146,7 @@ function pickMob(mobsDefeated = 0, mathTier = 1) {
     mobHearts: maxHearts,
     mobMaxHearts: maxHearts,
     mobScale,
+    bossMode: false,
   };
 }
 
@@ -178,6 +198,7 @@ function migrate(parsed) {
     doubleHitCharges: Math.max(0, parsed.doubleHitCharges || 0),
     shieldCharges: Math.max(0, parsed.shieldCharges || 0),
     biome: parsed.biome || 'plains',
+    bossMode: Boolean(parsed.bossMode),
   };
 }
 
@@ -337,7 +358,33 @@ export function getEquippedCosmetics() {
 }
 
 export function getMobInfo(id = state.mobType) {
+  if (id === BOSS_HORDE_ID || state.bossMode) {
+    return {
+      id: BOSS_HORDE_ID,
+      name: 'BOSS HORDE!!!',
+      maxHearts: getBossHordeHearts(),
+      boss: true,
+    };
+  }
+  const boss = BOSS_TYPES.find((b) => b.id === id);
+  if (boss) return { ...boss, boss: true };
   return MOB_TYPES.find((m) => m.id === id) || MOB_TYPES[0];
+}
+
+/** Summon every crazy boss at once. */
+export function startBossBattle() {
+  const hearts = getBossHordeHearts();
+  state.bossMode = true;
+  state.mobType = BOSS_HORDE_ID;
+  state.mobHearts = hearts;
+  state.mobMaxHearts = hearts;
+  state.mobScale = 1.35;
+  save();
+  return getMobInfo(BOSS_HORDE_ID);
+}
+
+export function isBossMode() {
+  return Boolean(state.bossMode) || state.mobType === BOSS_HORDE_ID;
 }
 
 export function getBiome() {
@@ -401,15 +448,17 @@ export function recordCorrect() {
   }
 
   const prevMob = state.mobType;
+  const wasBoss = Boolean(state.bossMode) || prevMob === BOSS_HORDE_ID;
   state.mobHearts = Math.max(0, state.mobHearts - damage);
   const mobDefeated = state.mobHearts <= 0;
   let newMobIntro = false;
 
   if (mobDefeated) {
     state.mobsDefeated += 1;
+    state.bossMode = false;
     Object.assign(state, pickMob(state.mobsDefeated, state.mathTier));
     newMobIntro = true;
-  } else if (tierUnlocked) {
+  } else if (tierUnlocked && !wasBoss) {
     Object.assign(state, pickMob(state.mobsDefeated, state.mathTier));
     newMobIntro = true;
   }
@@ -425,6 +474,7 @@ export function recordCorrect() {
     usedDoubleHit,
     oneShot,
     mobDefeated,
+    bossDefeated: mobDefeated && wasBoss,
     newMobIntro,
     prevMob,
     playerHearts: state.playerHearts,
@@ -477,7 +527,7 @@ export function getLockedRewards() {
     .filter((w) => !w.cheat && !state.ownedWeapons.includes(w.id))
     .map((item) => ({ type: 'weapon', item }));
   const cosmetics = COSMETICS
-    .filter((c) => c.kind !== 'none' && !state.ownedCosmetics.includes(c.id))
+    .filter((c) => c.kind !== 'none' && !c.cheat && !state.ownedCosmetics.includes(c.id))
     .map((item) => ({ type: 'cosmetic', item }));
   return [...weapons, ...cosmetics];
 }
@@ -576,6 +626,18 @@ export function equipOpRainbowSword() {
   state.equipped = id;
   save();
   return { ok: true, item: weapon };
+}
+
+/** Instant unlock + equip Rainbow Shining Armor. */
+export function equipOpRainbowArmor() {
+  const id = 'armor_diamond_enchanted';
+  const item = COSMETICS.find((c) => c.id === id);
+  if (!item) return { ok: false };
+  if (!state.ownedCosmetics.includes(id)) state.ownedCosmetics.push(id);
+  state.armor = id;
+  syncHeartsToArmorCap();
+  save();
+  return { ok: true, item };
 }
 
 export function setMuted(muted) {

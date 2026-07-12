@@ -104,7 +104,7 @@ export function createShop(root, { onClose, onEquip, onReset }) {
                   ? `+${cosmetic.extraHearts} hearts · Rainbow shine!`
                   : 'Looking cool!')
                 : 'Unlocked!')
-              : 'Unlock by answering correctly!'}</p>
+              : (cosmetic.cheat ? 'Tap the rainbow OP ARMOR button!' : 'Unlock by answering correctly!')}</p>
           </div>
           <button type="button" class="mc-btn ${cls}" ${disabled ? 'disabled' : ''}>${label}</button>
         `;

@@ -303,6 +303,302 @@ function drawGiant(ctx, cx, baseY, depth, hurt, pose) {
   ctx.globalAlpha = 1;
 }
 
+/** Steve-like figure with glowing white eyes — Herobrine. */
+function drawHerobrine(ctx, cx, baseY, depth, hurt, pose) {
+  const skin = hurt ? '#c07070' : '#C68642';
+  const skinD = '#A86B32';
+  const shirt = hurt ? '#5a2020' : '#3A7A2A';
+  const pants = '#2C4A7A';
+  const {
+    legL = 0, legR = 0, armL = 0, armR = 0,
+    headTilt = 0, headBob = 0, expression = 'angry',
+  } = pose;
+  drawLimb(ctx, cx - 18, baseY - 36, 14, 36, depth, [pants, '#1C3A5A', '#3C6A9A'], legL, cx - 11, baseY - 36);
+  drawLimb(ctx, cx + 4, baseY - 36, 14, 36, depth, [pants, '#1C3A5A', '#3C6A9A'], legR, cx + 11, baseY - 36);
+  drawBox(ctx, cx - 22, baseY - 84, 44, 48, depth + 2, shirt, '#2A5A1A', '#4A9A3A');
+  drawLimb(ctx, cx - 36, baseY - 80, 12, 40, depth - 2, [skin, skinD, skin], armL, cx - 30, baseY - 78);
+  drawLimb(ctx, cx + 24, baseY - 80, 12, 40, depth - 2, [skin, skinD, skin], armR, cx + 30, baseY - 78);
+  const headY = baseY - 124 + headBob;
+  ctx.save();
+  ctx.translate(cx, headY + 20);
+  ctx.rotate(headTilt);
+  ctx.translate(-cx, -(headY + 20));
+  drawBox(ctx, cx - 20, headY, 40, 40, depth + 4, skin, skinD, '#E0A060');
+  ctx.fillStyle = '#3B2414';
+  ctx.fillRect(cx - 20, headY, 40, 10);
+  ctx.shadowColor = '#fff';
+  ctx.shadowBlur = 14;
+  ctx.fillStyle = '#fff';
+  ctx.fillRect(cx - 12, headY + 16, 10, 8);
+  ctx.fillRect(cx + 4, headY + 16, 10, 8);
+  ctx.shadowBlur = 0;
+  if (expression === 'angry') {
+    ctx.fillStyle = '#111';
+    ctx.fillRect(cx - 6, headY + 30, 14, 3);
+  }
+  ctx.restore();
+}
+
+function drawEnderDragon(ctx, cx, baseY, depth, hurt, pose) {
+  const body = hurt ? '#6a3060' : '#1A0A2A';
+  const wing = hurt ? '#a05090' : '#4A2A6A';
+  const {
+    armL = 0, armR = 0, headTilt = 0, headBob = 0, bob = 0, jump = 0,
+  } = pose;
+  const flap = Math.sin((armL + armR + bob) * 2) * 0.5;
+  // Wings
+  ctx.fillStyle = wing;
+  ctx.beginPath();
+  ctx.moveTo(cx - 10, baseY - 90);
+  ctx.lineTo(cx - 90, baseY - 110 - flap * 40 - jump);
+  ctx.lineTo(cx - 20, baseY - 70);
+  ctx.closePath();
+  ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(cx + 10, baseY - 90);
+  ctx.lineTo(cx + 90, baseY - 110 + flap * 40 - jump);
+  ctx.lineTo(cx + 20, baseY - 70);
+  ctx.closePath();
+  ctx.fill();
+  // Body + neck
+  drawBox(ctx, cx - 28, baseY - 70, 56, 40, depth + 4, body, '#0A0010', '#2A1A3A');
+  drawBox(ctx, cx - 10, baseY - 110, 20, 40, depth, body, '#0A0010', '#2A1A3A');
+  const headY = baseY - 140 + headBob;
+  ctx.save();
+  ctx.translate(cx, headY + 16);
+  ctx.rotate(headTilt);
+  ctx.translate(-cx, -(headY + 16));
+  drawBox(ctx, cx - 22, headY, 44, 32, depth + 2, body, '#0A0010', '#2A1A3A');
+  ctx.fillStyle = '#E74C3C';
+  ctx.shadowColor = '#ff4040';
+  ctx.shadowBlur = 10;
+  ctx.fillRect(cx - 14, headY + 12, 12, 6);
+  ctx.fillRect(cx + 4, headY + 12, 12, 6);
+  ctx.shadowBlur = 0;
+  ctx.fillStyle = '#C9B6FF';
+  ctx.fillRect(cx - 4, headY + 22, 10, 6);
+  ctx.restore();
+  // Tail
+  ctx.fillStyle = body;
+  ctx.fillRect(cx - 6, baseY - 30, 12, 28);
+  ctx.fillRect(cx + 4, baseY - 8, 18, 10);
+}
+
+function drawWarden(ctx, cx, baseY, depth, hurt, pose, superMode = false) {
+  const body = hurt ? '#3a5a6a' : (superMode ? '#0A2A4A' : '#0E2A3A');
+  const glow = superMode ? '#7DFFB0' : '#4AEDD9';
+  const {
+    legL = 0, legR = 0, armL = 0, armR = 0,
+    headTilt = 0, headBob = 0, expression = 'angry',
+  } = pose;
+  const thick = superMode ? 6 : 0;
+  drawLimb(ctx, cx - 22 - thick / 2, baseY - 44, 18 + thick, 44, depth, [body, '#061018', glow], legL, cx - 13, baseY - 44);
+  drawLimb(ctx, cx + 4, baseY - 44, 18 + thick, 44, depth, [body, '#061018', glow], legR, cx + 13, baseY - 44);
+  drawBox(ctx, cx - 30 - thick / 2, baseY - 110, 60 + thick, 66, depth + 4, body, '#061018', glow);
+  drawLimb(ctx, cx - 48, baseY - 100, 16, 70, depth, [body, '#061018', glow], armL, cx - 40, baseY - 98);
+  drawLimb(ctx, cx + 32, baseY - 100, 16, 70, depth, [body, '#061018', glow], armR, cx + 40, baseY - 98);
+  // Rib glow
+  ctx.fillStyle = glow;
+  ctx.shadowColor = glow;
+  ctx.shadowBlur = superMode ? 18 : 10;
+  ctx.fillRect(cx - 14, baseY - 90, 8, 28);
+  ctx.fillRect(cx + 6, baseY - 90, 8, 28);
+  if (superMode) {
+    ctx.fillRect(cx - 4, baseY - 95, 8, 36);
+    ctx.fillStyle = '#FF4D6D';
+    ctx.fillRect(cx - 18, baseY - 70, 36, 6);
+  }
+  ctx.shadowBlur = 0;
+  const headY = baseY - 150 + headBob;
+  ctx.save();
+  ctx.translate(cx, headY + 20);
+  ctx.rotate(headTilt);
+  ctx.translate(-cx, -(headY + 20));
+  drawBox(ctx, cx - 24, headY, 48, 42, depth + 3, body, '#061018', glow);
+  // Horns / ears
+  ctx.fillStyle = body;
+  ctx.fillRect(cx - 28, headY - 16, 12, 20);
+  ctx.fillRect(cx + 16, headY - 16, 12, 20);
+  ctx.fillStyle = glow;
+  ctx.shadowColor = glow;
+  ctx.shadowBlur = 12;
+  ctx.fillRect(cx - 10, headY + 14, 8, 8);
+  ctx.fillRect(cx + 4, headY + 14, 8, 8);
+  ctx.shadowBlur = 0;
+  if (expression === 'angry') {
+    ctx.fillStyle = '#111';
+    ctx.fillRect(cx - 8, headY + 28, 18, 4);
+  }
+  ctx.restore();
+}
+
+function drawBlaze(ctx, cx, baseY, depth, hurt, pose) {
+  const fire = hurt ? '#ff8080' : '#FF8C20';
+  const core = hurt ? '#ffe0a0' : '#FFE566';
+  const { headBob = 0, bob = 0, armL = 0, jump = 0 } = pose;
+  // Rods orbiting
+  for (let i = 0; i < 8; i += 1) {
+    const a = (i / 8) * Math.PI * 2 + bob * 0.15 + armL;
+    const r = 34 + (i % 2) * 10;
+    const rx = cx + Math.cos(a) * r;
+    const ry = baseY - 70 + Math.sin(a) * 22 - jump * 0.3;
+    ctx.fillStyle = i % 2 ? fire : core;
+    ctx.shadowColor = fire;
+    ctx.shadowBlur = 8;
+    ctx.fillRect(rx - 3, ry - 14, 6, 28);
+  }
+  ctx.shadowBlur = 0;
+  const headY = baseY - 100 + headBob;
+  drawBox(ctx, cx - 18, headY, 36, 36, depth + 2, fire, '#8B3A00', core);
+  ctx.fillStyle = '#111';
+  ctx.fillRect(cx - 10, headY + 12, 8, 8);
+  ctx.fillRect(cx + 4, headY + 12, 8, 8);
+  ctx.fillStyle = core;
+  ctx.fillRect(cx - 4, headY + 24, 10, 4);
+}
+
+function drawWither(ctx, cx, baseY, depth, hurt, pose) {
+  const bone = hurt ? '#5a3030' : '#2A2A2A';
+  const {
+    armL = 0, armR = 0, headTilt = 0, headBob = 0, expression = 'angry',
+  } = pose;
+  // Three heads
+  const heads = [-36, 0, 36];
+  heads.forEach((ox, i) => {
+    const hy = baseY - 130 + headBob + (i === 1 ? -8 : 0);
+    drawBox(ctx, cx + ox - 16, hy, 32, 32, depth + 2, bone, '#111', '#4A4A4A');
+    ctx.fillStyle = '#E74C3C';
+    ctx.shadowColor = '#ff3030';
+    ctx.shadowBlur = 8;
+    ctx.fillRect(cx + ox - 10, hy + 12, 8, 6);
+    ctx.fillRect(cx + ox + 4, hy + 12, 8, 6);
+    ctx.shadowBlur = 0;
+  });
+  // Body spine
+  drawBox(ctx, cx - 14, baseY - 90, 28, 50, depth, bone, '#111', '#4A4A4A');
+  drawLimb(ctx, cx - 40, baseY - 85, 12, 50, depth - 2, [bone, '#111', '#4A4A4A'], armL, cx - 34, baseY - 82);
+  drawLimb(ctx, cx + 28, baseY - 85, 12, 50, depth - 2, [bone, '#111', '#4A4A4A'], armR, cx + 34, baseY - 82);
+  // Ribs
+  ctx.strokeStyle = bone;
+  ctx.lineWidth = 4;
+  for (let i = 0; i < 3; i += 1) {
+    ctx.beginPath();
+    ctx.moveTo(cx - 22, baseY - 80 + i * 12);
+    ctx.lineTo(cx + 22, baseY - 80 + i * 12);
+    ctx.stroke();
+  }
+  if (expression === 'angry') {
+    ctx.fillStyle = '#E74C3C';
+    ctx.fillRect(cx - 6, baseY - 55, 12, 4);
+  }
+  void headTilt;
+}
+
+function drawLion(ctx, cx, baseY, depth, hurt, pose) {
+  const fur = hurt ? '#c07040' : '#E8A040';
+  const mane = hurt ? '#8a4020' : '#C0392B';
+  const dark = '#8B5A2B';
+  const {
+    legL = 0, legR = 0, armL = 0, headTilt = 0, headBob = 0, expression = 'angry', mouthOpen = 0,
+  } = pose;
+  drawLimb(ctx, cx - 22, baseY - 32, 14, 32, depth, [fur, dark, '#FFE080'], legL, cx - 15, baseY - 32);
+  drawLimb(ctx, cx + 8, baseY - 32, 14, 32, depth, [fur, dark, '#FFE080'], legR, cx + 15, baseY - 32);
+  drawBox(ctx, cx - 30, baseY - 70, 60, 40, depth + 3, fur, dark, '#FFE080');
+  // Tail
+  ctx.strokeStyle = fur;
+  ctx.lineWidth = 5;
+  ctx.beginPath();
+  ctx.moveTo(cx + 28, baseY - 50);
+  ctx.quadraticCurveTo(cx + 50, baseY - 70 + armL * 10, cx + 58, baseY - 40);
+  ctx.stroke();
+  ctx.fillStyle = mane;
+  ctx.fillRect(cx + 54, baseY - 44, 10, 10);
+  // Mane
+  ctx.fillStyle = mane;
+  for (let i = 0; i < 8; i += 1) {
+    const a = -0.4 + i * 0.35;
+    ctx.beginPath();
+    ctx.arc(cx - 8 + Math.cos(a) * 6, baseY - 100 + Math.sin(a) * 4, 14, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  const headY = baseY - 112 + headBob;
+  ctx.save();
+  ctx.translate(cx - 8, headY + 18);
+  ctx.rotate(headTilt);
+  ctx.translate(-(cx - 8), -(headY + 18));
+  drawBox(ctx, cx - 28, headY, 40, 36, depth + 2, fur, dark, '#FFE080');
+  ctx.fillStyle = '#111';
+  ctx.fillRect(cx - 20, headY + 14, 8, 6);
+  ctx.fillRect(cx - 2, headY + 14, 8, 6);
+  ctx.fillStyle = '#fff';
+  ctx.fillRect(cx - 18, headY + 15, 3, 3);
+  const mh = 4 + mouthOpen * 10;
+  ctx.fillStyle = '#111';
+  ctx.fillRect(cx - 14, headY + 24, 18, mh);
+  if (expression === 'angry' || mouthOpen > 0.2) {
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(cx - 12, headY + 24, 4, 6);
+    ctx.fillRect(cx + 2, headY + 24, 4, 6);
+  }
+  ctx.restore();
+}
+
+function drawMobBody(ctx, mobType, cx, baseY, depth, hurt, pose) {
+  if (mobType === 'creeper') drawCreeper(ctx, cx, baseY, depth, hurt, pose);
+  else if (mobType === 'skeleton') drawSkeleton(ctx, cx, baseY, depth, hurt, pose);
+  else if (mobType === 'spider') drawSpider(ctx, cx, baseY, depth, hurt, pose);
+  else if (mobType === 'enderman') drawEnderman(ctx, cx, baseY, depth, hurt, pose);
+  else if (mobType === 'wither_skel') drawWitherSkel(ctx, cx, baseY, depth, hurt, pose);
+  else if (mobType === 'giant') drawGiant(ctx, cx, baseY, depth, hurt, pose);
+  else if (mobType === 'herobrine') drawHerobrine(ctx, cx, baseY, depth, hurt, pose);
+  else if (mobType === 'ender_dragon') drawEnderDragon(ctx, cx, baseY, depth, hurt, pose);
+  else if (mobType === 'warden') drawWarden(ctx, cx, baseY, depth, hurt, pose, false);
+  else if (mobType === 'super_warden') drawWarden(ctx, cx, baseY, depth, hurt, pose, true);
+  else if (mobType === 'blaze') drawBlaze(ctx, cx, baseY, depth, hurt, pose);
+  else if (mobType === 'wither') drawWither(ctx, cx, baseY, depth, hurt, pose);
+  else if (mobType === 'lion') drawLion(ctx, cx, baseY, depth, hurt, pose);
+  else drawZombie(ctx, cx, baseY, depth, hurt, pose);
+}
+
+const BOSS_PARADE = [
+  { id: 'herobrine', x: 0.16, y: 0.88, s: 0.78 },
+  { id: 'lion', x: 0.38, y: 0.90, s: 0.72 },
+  { id: 'warden', x: 0.62, y: 0.90, s: 0.7 },
+  { id: 'blaze', x: 0.84, y: 0.86, s: 0.68 },
+  { id: 'wither', x: 0.22, y: 0.58, s: 0.62 },
+  { id: 'super_warden', x: 0.72, y: 0.55, s: 0.75 },
+  { id: 'ender_dragon', x: 0.48, y: 0.42, s: 0.8 },
+];
+
+function drawBossHorde(ctx, w, h, pose, hurt) {
+  // Title banner glow
+  ctx.save();
+  ctx.font = 'bold 14px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillStyle = '#FFE566';
+  ctx.shadowColor = '#FF4D6D';
+  ctx.shadowBlur = 12;
+  ctx.fillText('BOSS HORDE!!!', w / 2, 22);
+  ctx.restore();
+
+  BOSS_PARADE.forEach((slot, i) => {
+    ctx.save();
+    const px = w * slot.x;
+    const py = h * slot.y;
+    ctx.translate(px, py);
+    ctx.scale(slot.s, slot.s);
+    const localPose = {
+      ...pose,
+      bob: (pose.bob || 0) + Math.sin((pose.bob || 0) * 0.2 + i) * 3,
+      armL: (pose.armL || 0) + Math.sin(i + 1) * 0.2,
+      armR: (pose.armR || 0) - Math.sin(i + 2) * 0.2,
+    };
+    // Local origin as character feet
+    drawMobBody(ctx, slot.id, 0, 0, 8, hurt, localPose);
+    ctx.restore();
+  });
+}
+
 /**
  * @param {HTMLCanvasElement} canvas
  * @param {{ mobType: string, pose?: object, hurt?: number, shake?: number, scale?: number }} opts
@@ -332,6 +628,20 @@ export function drawMob(canvas, opts) {
   const h = canvas.height;
   ctx.clearRect(0, 0, w, h);
 
+  const isHurt = hurt > 0;
+
+  if (mobType === 'boss_horde') {
+    ctx.save();
+    ctx.translate(shake + lunge * 0.3, -jump * 0.3);
+    drawBossHorde(ctx, w, h, pose, isHurt);
+    ctx.restore();
+    if (hurt > 0) {
+      ctx.fillStyle = `rgba(255,40,40,${hurt * 0.35})`;
+      ctx.fillRect(0, 0, w, h);
+    }
+    return;
+  }
+
   const fuseSwell = 1 + fuse * 0.35;
 
   ctx.save();
@@ -351,14 +661,7 @@ export function drawMob(canvas, opts) {
   ctx.ellipse(cx + 8, h * 0.86, 48 * Math.min(scale, 1.2), 12, 0, 0, Math.PI * 2);
   ctx.fill();
 
-  const isHurt = hurt > 0;
-  if (mobType === 'creeper') drawCreeper(ctx, cx, baseY, depth, isHurt, pose);
-  else if (mobType === 'skeleton') drawSkeleton(ctx, cx, baseY, depth, isHurt, pose);
-  else if (mobType === 'spider') drawSpider(ctx, cx, baseY, depth, isHurt, pose);
-  else if (mobType === 'enderman') drawEnderman(ctx, cx, baseY, depth, isHurt, pose);
-  else if (mobType === 'wither_skel') drawWitherSkel(ctx, cx, baseY, depth, isHurt, pose);
-  else if (mobType === 'giant') drawGiant(ctx, cx, baseY, depth, isHurt, pose);
-  else drawZombie(ctx, cx, baseY, depth, isHurt, pose);
+  drawMobBody(ctx, mobType, cx, baseY, depth, isHurt, pose);
 
   ctx.restore();
 

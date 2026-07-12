@@ -319,12 +319,14 @@ export async function playBattleSequence(opts) {
 
     if (mobType === 'creeper') {
       await counterCreeper(ctx);
-    } else if (mobType === 'zombie' || mobType === 'giant') {
+    } else if (mobType === 'zombie' || mobType === 'giant' || mobType === 'lion') {
       await counterZombie(ctx);
-    } else if (mobType === 'enderman') {
+    } else if (mobType === 'enderman' || mobType === 'herobrine') {
       await counterEnderman(ctx);
-    } else if (mobType === 'skeleton' || mobType === 'wither_skel') {
+    } else if (mobType === 'skeleton' || mobType === 'wither_skel' || mobType === 'wither' || mobType === 'blaze') {
       await counterSkeleton(ctx);
+    } else if (mobType === 'boss_horde' || mobType === 'warden' || mobType === 'super_warden' || mobType === 'ender_dragon') {
+      await counterDefault(ctx);
     } else {
       await counterDefault(ctx);
     }
