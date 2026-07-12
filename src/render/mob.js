@@ -188,37 +188,128 @@ function drawSkeleton(ctx, cx, baseY, depth, hurt, pose) {
   ctx.restore();
 }
 
-function drawSpider(ctx, cx, baseY, depth, hurt, pose) {
-  const body = hurt ? '#8a3a3a' : '#2A1A1A';
-  const side = hurt ? '#5a2020' : '#111';
-  const top = hurt ? '#b06060' : '#3A2A2A';
-  const { legL = 0, armL = 0, headTilt = 0, expression = 'normal', mouthOpen = 0, bob = 0 } = pose;
+function drawSpider(ctx, cx, baseY, depth, hurt, pose, rainbow = false) {
+  const hue = rainbow ? (performance.now() / 9) % 360 : 0;
+  const rh = (h, sat = 75, light = 45) => {
+    const hh = ((h % 360) + 360) % 360;
+    const s = sat / 100;
+    const l = light / 100;
+    const c = (1 - Math.abs(2 * l - 1)) * s;
+    const x = c * (1 - Math.abs(((hh / 60) % 2) - 1));
+    const m = l - c / 2;
+    let r = 0;
+    let g = 0;
+    let b = 0;
+    if (hh < 60) [r, g, b] = [c, x, 0];
+    else if (hh < 120) [r, g, b] = [x, c, 0];
+    else if (hh < 180) [r, g, b] = [0, c, x];
+    else if (hh < 240) [r, g, b] = [0, x, c];
+    else if (hh < 300) [r, g, b] = [x, 0, c];
+    else [r, g, b] = [c, 0, x];
+    const to = (n) => Math.round((n + m) * 255).toString(16).padStart(2, '0');
+    return `#${to(r)}${to(g)}${to(b)}`;
+  };
 
-  drawBox(ctx, cx - 28, baseY - 50, 56, 36, depth + 4, body, side, top);
+  const body = hurt ? '#8a3a3a' : rainbow ? rh(hue, 80, 38) : '#2A1A1A';
+  const side = hurt ? '#5a2020' : rainbow ? rh(hue + 50, 70, 28) : '#111';
+  const top = hurt ? '#b06060' : rainbow ? rh(hue + 110, 85, 58) : '#3A2A2A';
+  const { legL = 0, armL = 0, headTilt = 0, expression = 'normal', mouthOpen = 0, bob = 0 } = pose;
+  const size = rainbow ? 1.55 : 1;
+
+  if (rainbow) {
+    ctx.save();
+    ctx.shadowColor = rh(hue, 90, 60);
+    ctx.shadowBlur = 24;
+    for (let i = 0; i < 12; i += 1) {
+      const a = (i / 12) * Math.PI * 2 + hue * 0.03;
+      const rad = 70 + Math.sin(hue * 0.05 + i) * 14;
+      ctx.fillStyle = rh(hue + i * 30, 95, 62);
+      ctx.globalAlpha = 0.5;
+      ctx.beginPath();
+      ctx.arc(cx + Math.cos(a) * rad, baseY - 55 + Math.sin(a) * 22, 5, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  drawBox(
+    ctx,
+    cx - 28 * size,
+    baseY - 50 * size,
+    56 * size,
+    36 * size,
+    depth + 4,
+    body,
+    side,
+    top,
+  );
   ctx.save();
-  ctx.translate(cx, baseY - 64);
+  ctx.translate(cx, baseY - 64 * size);
   ctx.rotate(headTilt);
-  ctx.translate(-cx, -(baseY - 64));
-  drawBox(ctx, cx - 16, baseY - 78, 32, 28, depth + 2, body, side, top);
-  ctx.fillStyle = '#E74C3C';
-  ctx.fillRect(cx - 10, baseY - 68, 6, 6);
-  ctx.fillRect(cx + 6, baseY - 68, 6, 6);
-  if (expression === 'laugh' || mouthOpen > 0.3) {
+  ctx.translate(-cx, -(baseY - 64 * size));
+  drawBox(
+    ctx,
+    cx - 16 * size,
+    baseY - 78 * size,
+    32 * size,
+    28 * size,
+    depth + 2,
+    body,
+    side,
+    top,
+  );
+  ctx.fillStyle = rainbow ? rh(hue + 200, 95, 65) : '#E74C3C';
+  if (rainbow) {
+    ctx.shadowColor = ctx.fillStyle;
+    ctx.shadowBlur = 14;
+  }
+  ctx.fillRect(cx - 10 * size, baseY - 68 * size, 8 * size, 8 * size);
+  ctx.fillRect(cx + 4 * size, baseY - 68 * size, 8 * size, 8 * size);
+  ctx.shadowBlur = 0;
+  if (expression === 'laugh' || mouthOpen > 0.3 || rainbow) {
     ctx.fillStyle = '#111';
-    ctx.fillRect(cx - 8, baseY - 58, 18, 6 + mouthOpen * 6);
+    ctx.fillRect(cx - 10 * size, baseY - 58 * size, 22 * size, 6 + mouthOpen * 8);
+    if (rainbow) {
+      ctx.fillStyle = '#fff';
+      ctx.fillRect(cx - 8 * size, baseY - 56 * size, 4 * size, 6);
+      ctx.fillRect(cx + 4 * size, baseY - 56 * size, 4 * size, 6);
+    }
   }
   ctx.restore();
 
-  ctx.strokeStyle = body;
-  ctx.lineWidth = 4;
+  ctx.strokeStyle = rainbow ? rh(hue + 160, 85, 50) : body;
+  ctx.lineWidth = rainbow ? 7 : 4;
+  if (rainbow) {
+    ctx.shadowColor = ctx.strokeStyle;
+    ctx.shadowBlur = 10;
+  }
   const kick = legL * 12 + armL * 8;
-  [[-40, -20], [-36, 0], [40, -20], [36, 0], [-42, -40], [42, -40]].forEach(([lx, ly], i) => {
-    const wave = Math.sin(i + bob * 0.2) * 6 + (i % 2 === 0 ? kick : -kick);
+  const legs = rainbow
+    ? [[-70, -30], [-64, 0], [-72, -55], [70, -30], [64, 0], [72, -55], [-50, 10], [50, 10]]
+    : [[-40, -20], [-36, 0], [40, -20], [36, 0], [-42, -40], [42, -40]];
+  legs.forEach(([lx, ly], i) => {
+    const wave = Math.sin(i + bob * 0.2) * (rainbow ? 10 : 6) + (i % 2 === 0 ? kick : -kick);
+    if (rainbow) ctx.strokeStyle = rh(hue + i * 40, 90, 52);
     ctx.beginPath();
-    ctx.moveTo(cx, baseY - 40);
-    ctx.lineTo(cx + lx + wave, baseY + ly);
+    ctx.moveTo(cx, baseY - 40 * size);
+    ctx.lineTo(cx + lx * (rainbow ? 1 : 1) + wave, baseY + ly);
     ctx.stroke();
   });
+  ctx.shadowBlur = 0;
+
+  if (rainbow) {
+    ctx.save();
+    ctx.font = 'bold 13px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#FFE566';
+    ctx.shadowColor = '#FF4D6D';
+    ctx.shadowBlur = 12;
+    ctx.fillText('OP RAINBOW SPIDER', cx, baseY - 120);
+    ctx.font = 'bold 9px sans-serif';
+    ctx.fillStyle = '#fff';
+    ctx.fillText('BILLION THOUSAND HEARTS!!!', cx, baseY - 106);
+    ctx.restore();
+  }
 }
 
 function drawEnderman(ctx, cx, baseY, depth, hurt, pose) {
@@ -615,7 +706,8 @@ function drawLion(ctx, cx, baseY, depth, hurt, pose) {
 function drawMobBody(ctx, mobType, cx, baseY, depth, hurt, pose) {
   if (mobType === 'creeper') drawCreeper(ctx, cx, baseY, depth, hurt, pose);
   else if (mobType === 'skeleton') drawSkeleton(ctx, cx, baseY, depth, hurt, pose);
-  else if (mobType === 'spider') drawSpider(ctx, cx, baseY, depth, hurt, pose);
+  else if (mobType === 'spider') drawSpider(ctx, cx, baseY, depth, hurt, pose, false);
+  else if (mobType === 'op_rainbow_spider') drawSpider(ctx, cx, baseY, depth, hurt, pose, true);
   else if (mobType === 'enderman') drawEnderman(ctx, cx, baseY, depth, hurt, pose);
   else if (mobType === 'wither_skel') drawWitherSkel(ctx, cx, baseY, depth, hurt, pose);
   else if (mobType === 'giant') drawGiant(ctx, cx, baseY, depth, hurt, pose);

@@ -10,6 +10,7 @@ import {
   equipOpRainbowArmor,
   startBossBattle,
   startOpRainbowDragonBattle,
+  startOpRainbowSpiderBattle,
   isBossMode,
 } from './game/state.js';
 import { unlockAudio, playClick, playPartyPop, startAmbient, playStreakFanfare, playParrotSquawk, setAmbientBiome, playEquip } from './game/audio.js';
@@ -80,6 +81,9 @@ app.innerHTML = `
       <button type="button" class="mc-btn op-rainbow-btn dragon-hud-btn" id="op-dragon-hud-btn" title="Summon OP Rainbow Ender Dragon — 1,000,000 hearts!!!">
         <span class="op-rainbow-label">🐉 OP DRAGON</span>
       </button>
+      <button type="button" class="mc-btn op-rainbow-btn spider-hud-btn" id="op-spider-hud-btn" title="Summon OP Rainbow Shining Spider — billion thousand hearts!!!">
+        <span class="op-rainbow-label">🕷️ OP SPIDER</span>
+      </button>
       <button type="button" class="mc-btn" id="mute-btn">Sound: On</button>
       <button type="button" class="mc-btn" id="questions-btn">Questions</button>
       <button type="button" class="mc-btn" id="sticker-btn">Stickers</button>
@@ -96,6 +100,10 @@ app.innerHTML = `
     <button type="button" class="mc-btn op-rainbow-btn boss-battle-btn boss-battle-btn--mega dragon-op-btn" id="op-dragon-btn" title="Summon the OP Rainbow Ender Dragon — 1,000,000 hearts!!!">
       <span class="op-rainbow-label boss-battle-mega-label">🌈🐉 OP RAINBOW ENDER DRAGON 🐉🌈</span>
       <span class="boss-battle-sub">1,000,000 HEARTS · Ultimate dragon battle!!!</span>
+    </button>
+    <button type="button" class="mc-btn op-rainbow-btn boss-battle-btn boss-battle-btn--mega spider-op-btn" id="op-spider-btn" title="Summon the OP Rainbow Shining Spider!!!">
+      <span class="op-rainbow-label boss-battle-mega-label">🌈🕷️ OP RAINBOW SHINING SPIDER 🕷️🌈</span>
+      <span class="boss-battle-sub">1 BILLION THOUSAND BILLION THOUSAND BILLION THOUSAND BILLION THOUSAND HEARTS!!!</span>
     </button>
   </div>
 
@@ -457,8 +465,32 @@ async function summonOpRainbowDragon() {
   }
 }
 
+async function summonOpRainbowSpider() {
+  await unlockAudio();
+  playClick();
+  playPartyPop();
+  const boss = startOpRainbowSpiderBattle();
+  app.querySelector('#battle-arena')?.classList.add('boss-mode', 'spider-op-mode');
+  mobAnimator.redraw();
+  syncHud(app);
+  flashArena('hit');
+  burstFromEl(app.querySelector('#mob-canvas'), {
+    count: 55,
+    kinds: ['star', 'spark', 'diamond', 'heart', 'emerald'],
+    spread: 210,
+  });
+  await showBossIntro(boss.name);
+  const feedback = app.querySelector('#feedback');
+  if (feedback) {
+    feedback.textContent = '🌈🕷️ OP RAINBOW SHINING SPIDER — BILLION THOUSAND HEARTS!!!!!!!';
+    feedback.className = 'feedback bonus';
+  }
+}
+
 app.querySelector('#op-dragon-btn')?.addEventListener('click', summonOpRainbowDragon);
 app.querySelector('#op-dragon-hud-btn')?.addEventListener('click', summonOpRainbowDragon);
+app.querySelector('#op-spider-btn')?.addEventListener('click', summonOpRainbowSpider);
+app.querySelector('#op-spider-hud-btn')?.addEventListener('click', summonOpRainbowSpider);
 
 app.querySelector('#sticker-btn').addEventListener('click', async () => {
   await unlockAudio();

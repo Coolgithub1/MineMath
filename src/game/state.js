@@ -96,9 +96,35 @@ export const BOSS_TYPES = [
 export const BOSS_HORDE_ID = 'boss_horde';
 export const OP_RAINBOW_DRAGON_ID = 'op_rainbow_dragon';
 export const OP_RAINBOW_DRAGON_HEARTS = 1_000_000;
+export const OP_RAINBOW_SPIDER_ID = 'op_rainbow_spider';
+/** 1×billion×thousand×billion×thousand×billion×thousand×billion×thousand = 10^48 */
+export const OP_RAINBOW_SPIDER_HEARTS = `1${'0'.repeat(48)}`;
+export const OP_RAINBOW_SPIDER_HEARTS_LABEL =
+  '1 BILLION THOUSAND BILLION THOUSAND BILLION THOUSAND BILLION THOUSAND';
 
 export function getBossHordeHearts() {
   return BOSS_TYPES.reduce((sum, b) => sum + b.maxHearts, 0);
+}
+
+export function heartsToBigInt(v) {
+  if (typeof v === 'bigint') return v;
+  if (typeof v === 'string' && /^\d+$/.test(v)) return BigInt(v);
+  const n = Number(v);
+  if (!Number.isFinite(n) || n <= 0) return 0n;
+  return BigInt(Math.floor(n));
+}
+
+export function formatHugeHearts(v) {
+  return heartsToBigInt(v).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+}
+
+function applyMobDamage(currentHearts, damage, oneShot) {
+  const cur = heartsToBigInt(currentHearts);
+  if (oneShot || damage === currentHearts) return 0;
+  const next = cur - heartsToBigInt(damage);
+  if (next <= 0n) return 0;
+  if (next > BigInt(Number.MAX_SAFE_INTEGER)) return next.toString();
+  return Number(next);
 }
 
 /** @type {{ a: number, b: number, op: '+'|'-' }[]} */
@@ -377,6 +403,16 @@ export function getMobInfo(id = state.mobType) {
       rainbow: true,
     };
   }
+  if (id === OP_RAINBOW_SPIDER_ID) {
+    return {
+      id: OP_RAINBOW_SPIDER_ID,
+      name: 'OP RAINBOW SHINING SPIDER',
+      maxHearts: OP_RAINBOW_SPIDER_HEARTS,
+      heartsLabel: OP_RAINBOW_SPIDER_HEARTS_LABEL,
+      boss: true,
+      rainbow: true,
+    };
+  }
   const boss = BOSS_TYPES.find((b) => b.id === id);
   if (boss) return { ...boss, boss: true };
   return MOB_TYPES.find((m) => m.id === id) || MOB_TYPES[0];
@@ -405,16 +441,32 @@ export function startOpRainbowDragonBattle() {
   return getMobInfo(OP_RAINBOW_DRAGON_ID);
 }
 
+/** Summon the massive OP Rainbow Shining Spider with absurd hearts. */
+export function startOpRainbowSpiderBattle() {
+  state.bossMode = true;
+  state.mobType = OP_RAINBOW_SPIDER_ID;
+  state.mobHearts = OP_RAINBOW_SPIDER_HEARTS;
+  state.mobMaxHearts = OP_RAINBOW_SPIDER_HEARTS;
+  state.mobScale = 2.2;
+  save();
+  return getMobInfo(OP_RAINBOW_SPIDER_ID);
+}
+
 export function isBossMode() {
   return (
     Boolean(state.bossMode)
     || state.mobType === BOSS_HORDE_ID
     || state.mobType === OP_RAINBOW_DRAGON_ID
+    || state.mobType === OP_RAINBOW_SPIDER_ID
   );
 }
 
 export function isOpRainbowDragon() {
   return state.mobType === OP_RAINBOW_DRAGON_ID;
+}
+
+export function isOpRainbowSpider() {
+  return state.mobType === OP_RAINBOW_SPIDER_ID;
 }
 
 export function getBiome() {
@@ -480,9 +532,10 @@ export function recordCorrect() {
   const prevMob = state.mobType;
   const wasBoss = Boolean(state.bossMode)
     || prevMob === BOSS_HORDE_ID
-    || prevMob === OP_RAINBOW_DRAGON_ID;
-  state.mobHearts = Math.max(0, state.mobHearts - damage);
-  const mobDefeated = state.mobHearts <= 0;
+    || prevMob === OP_RAINBOW_DRAGON_ID
+    || prevMob === OP_RAINBOW_SPIDER_ID;
+  state.mobHearts = applyMobDamage(state.mobHearts, damage, oneShot);
+  const mobDefeated = heartsToBigInt(state.mobHearts) <= 0n;
   let newMobIntro = false;
 
   if (mobDefeated) {

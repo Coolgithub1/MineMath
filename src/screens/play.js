@@ -9,6 +9,8 @@ import {
   getPlayerMaxHearts,
   isBossMode,
   isOpRainbowDragon,
+  isOpRainbowSpider,
+  OP_RAINBOW_SPIDER_HEARTS_LABEL,
   subscribe,
   recordCorrect,
   recordWrong,
@@ -197,7 +199,9 @@ export function createPlayScreen(root, hooks) {
           result.bossDefeated
             ? (result.prevMob === 'op_rainbow_dragon'
               ? '🌈🐉 OP RAINBOW ENDER DRAGON DEFEATED!!! UNBELIEVABLE!!!'
-              : '⚔️ BOSS HORDE DEFEATED!!! Absolute legend!')
+              : result.prevMob === 'op_rainbow_spider'
+                ? '🌈🕷️ OP RAINBOW SHINING SPIDER DEFEATED!!! LEGENDARY!!!'
+                : '⚔️ BOSS HORDE DEFEATED!!! Absolute legend!')
             : result.oneShot
               ? `🌈 ONE SHOT!! ${mob.name} deleted! A bigger foe appears!`
               : `Mob defeated!${result.usedDoubleHit ? ' DOUBLE HIT!' : ''} A bigger ${mob.name} appears!`,
@@ -355,8 +359,10 @@ export function syncHud(root) {
   if (mobName) mobName.textContent = mob.name;
   const mobStatus = root.querySelector('#mob-status');
   if (mobStatus) {
-    if (isOpRainbowDragon()) {
-      mobStatus.textContent = `${s.mobHearts.toLocaleString()} / 1,000,000 HP`;
+    if (isOpRainbowSpider()) {
+      mobStatus.textContent = `${OP_RAINBOW_SPIDER_HEARTS_LABEL} HP`;
+    } else if (isOpRainbowDragon()) {
+      mobStatus.textContent = `${Number(s.mobHearts).toLocaleString()} / 1,000,000 HP`;
     } else if (isBossMode()) {
       mobStatus.textContent = `${s.mobHearts}/${s.mobMaxHearts} HP · 7 BOSSES`;
     } else {
@@ -367,17 +373,21 @@ export function syncHud(root) {
   const arena = root.querySelector('#battle-arena');
   arena?.classList.toggle('boss-mode', isBossMode());
   arena?.classList.toggle('dragon-op-mode', isOpRainbowDragon());
+  arena?.classList.toggle('spider-op-mode', isOpRainbowSpider());
 
   renderHearts(root.querySelector('#player-hearts'), s.playerHearts, getPlayerMaxHearts(), 'heart-full');
-  // Don't try to draw a million heart icons
-  const mobHeartMax = isOpRainbowDragon() ? Math.min(20, s.mobMaxHearts) : s.mobMaxHearts;
-  const mobHeartCur = isOpRainbowDragon()
-    ? Math.max(1, Math.ceil((s.mobHearts / s.mobMaxHearts) * 20))
-    : s.mobHearts;
+  const hugeBoss = isOpRainbowDragon() || isOpRainbowSpider();
+  const mobHeartMax = hugeBoss ? 20 : s.mobMaxHearts;
+  let mobHeartCur = s.mobHearts;
+  if (hugeBoss) {
+    const maxB = typeof s.mobMaxHearts === 'string' ? BigInt(s.mobMaxHearts) : BigInt(s.mobMaxHearts || 1);
+    const curB = typeof s.mobHearts === 'string' ? BigInt(s.mobHearts) : BigInt(s.mobHearts || 0);
+    mobHeartCur = curB <= 0n ? 0 : Math.max(1, Number((curB * 20n) / (maxB <= 0n ? 1n : maxB)));
+  }
   renderHearts(
     root.querySelector('#mob-hearts'),
-    isOpRainbowDragon() ? (s.mobHearts > 0 ? mobHeartCur : 0) : s.mobHearts,
-    mobHeartMax,
+    hugeBoss ? mobHeartCur : s.mobHearts,
+    hugeBoss ? mobHeartMax : s.mobMaxHearts,
     'heart-mob',
   );
 }
