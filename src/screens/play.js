@@ -6,13 +6,13 @@ import {
   getMathTier,
   getCustomEquations,
   getEquationIndex,
+  getPlayerMaxHearts,
   subscribe,
   recordCorrect,
   recordWrong,
   grantPowerUp,
   unlockSticker,
   hasSticker,
-  PLAYER_MAX_HEARTS,
 } from '../game/state.js';
 import { generateQuestion, stageLabel, formatEquation } from '../game/math.js';
 import {
@@ -338,7 +338,7 @@ export function syncHud(root) {
   const cos = getEquippedCosmetics();
   const cosLabel = root.querySelector('#cosmetic-label');
   if (cosLabel) {
-    const bits = [cos.hat, cos.cape, cos.accessory]
+    const bits = [cos.hat, cos.cape, cos.accessory, cos.armor]
       .filter((c) => c && c.kind !== 'none')
       .map((c) => c.name);
     cosLabel.textContent = bits.length ? bits.join(' · ') : 'No cosmetics';
@@ -351,6 +351,6 @@ export function syncHud(root) {
     mobStatus.textContent = `${s.mobHearts}/${s.mobMaxHearts} hearts`;
   }
 
-  renderHearts(root.querySelector('#player-hearts'), s.playerHearts, PLAYER_MAX_HEARTS, 'heart-full');
+  renderHearts(root.querySelector('#player-hearts'), s.playerHearts, getPlayerMaxHearts(), 'heart-full');
   renderHearts(root.querySelector('#mob-hearts'), s.mobHearts, s.mobMaxHearts, 'heart-mob');
 }

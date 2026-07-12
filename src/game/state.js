@@ -54,6 +54,21 @@ export const COSMETICS = [
   { id: 'acc_backpack', name: 'Adventure Pack', slot: 'accessory', cost: 35, kind: 'backpack', color: '#8B5A2B' },
   { id: 'acc_parrot', name: 'Shoulder Parrot', slot: 'accessory', cost: 60, kind: 'parrot', color: '#E74C3C' },
   { id: 'acc_boots', name: 'Sparkly Boots', slot: 'accessory', cost: 45, kind: 'boots', color: '#4AEDD9' },
+
+  { id: 'armor_none', name: 'No Armor', slot: 'armor', cost: 0, kind: 'none' },
+  {
+    id: 'armor_diamond_enchanted',
+    name: 'Rainbow Shining Armor',
+    slot: 'armor',
+    cost: 200,
+    kind: 'diamond_set',
+    color: '#FF4D6D',
+    edge: '#C9B6FF',
+    tip: '#4AEDD9',
+    glow: true,
+    rainbow: true,
+    extraHearts: 3,
+  },
 ];
 
 export const MOB_TYPES = [
@@ -72,10 +87,11 @@ const DEFAULT_EQUATIONS_SEED = DEFAULT_EQUATIONS;
 const DEFAULT_STATE = {
   ownedWeapons: ['wood'],
   equipped: 'wood',
-  ownedCosmetics: ['hat_none', 'cape_none', 'acc_none'],
+  ownedCosmetics: ['hat_none', 'cape_none', 'acc_none', 'armor_none'],
   hat: 'hat_none',
   cape: 'cape_none',
   accessory: 'acc_none',
+  armor: 'armor_none',
   totalCorrect: 0,
   streak: 0,
   mathTier: 2,
@@ -149,10 +165,11 @@ function migrate(parsed) {
     ownedWeapons,
     ownedCosmetics: Array.isArray(parsed.ownedCosmetics)
       ? parsed.ownedCosmetics
-      : ['hat_none', 'cape_none', 'acc_none'],
+      : ['hat_none', 'cape_none', 'acc_none', 'armor_none'],
     hat: parsed.hat || 'hat_none',
     cape: parsed.cape || 'cape_none',
     accessory: parsed.accessory || 'acc_none',
+    armor: parsed.armor || 'armor_none',
     mathTier: Math.min(3, Math.max(1, parsed.mathTier || 2)),
     equationIndex,
     starterQuestionIndex: equationIndex,
@@ -189,6 +206,10 @@ function loadRaw() {
     if (!Array.isArray(parsed.customEquations) || !parsed.customEquations.length) {
       parsed.customEquations = DEFAULT_EQUATIONS_SEED.map((e) => ({ ...e }));
     }
+    if (!parsed.ownedCosmetics.includes('armor_none')) {
+      parsed.ownedCosmetics.push('armor_none');
+    }
+    if (!parsed.armor) parsed.armor = 'armor_none';
     return parsed;
   } catch {
     return { ...DEFAULT_STATE, ...pickMob(0, 2) };
@@ -287,11 +308,31 @@ export function getCosmetic(id) {
   return COSMETICS.find((c) => c.id === id) || null;
 }
 
+export function getEquippedArmor() {
+  return getCosmetic(state.armor) || COSMETICS.find((c) => c.id === 'armor_none');
+}
+
+/** Base hearts + bonus from equipped armor. */
+export function getPlayerMaxHearts() {
+  const armor = getEquippedArmor();
+  return PLAYER_MAX_HEARTS + (armor?.extraHearts || 0);
+}
+
+function syncHeartsToArmorCap() {
+  const max = getPlayerMaxHearts();
+  if (state.playerHearts > max) state.playerHearts = max;
+  else if (state.playerHearts < max && state.playerHearts > 0) {
+    // Equipping armor tops you up to the new max — feels rewarding
+    state.playerHearts = max;
+  }
+}
+
 export function getEquippedCosmetics() {
   return {
     hat: getCosmetic(state.hat) || COSMETICS[0],
     cape: getCosmetic(state.cape) || COSMETICS.find((c) => c.id === 'cape_none'),
     accessory: getCosmetic(state.accessory) || COSMETICS.find((c) => c.id === 'acc_none'),
+    armor: getEquippedArmor(),
   };
 }
 
@@ -410,7 +451,7 @@ export function recordWrong() {
   }
   const playerDefeated = !shielded && state.playerHearts <= 0;
   if (playerDefeated) {
-    state.playerHearts = PLAYER_MAX_HEARTS;
+    state.playerHearts = getPlayerMaxHearts();
   }
   save();
   return {
@@ -482,8 +523,9 @@ export function unlockReward(type, id) {
     if (!item) return { ok: false, reason: 'unknown' };
     if (!state.ownedCosmetics.includes(id)) state.ownedCosmetics.push(id);
     state[item.slot] = id;
+    if (item.slot === 'armor') syncHeartsToArmorCap();
     save();
-    return { ok: true, type: 'cosmetic', item, label: 'cosmetic' };
+    return { ok: true, type: 'cosmetic', item, label: item.slot === 'armor' ? 'armor' : 'cosmetic' };
   }
 
   return { ok: false, reason: 'unknown' };
@@ -513,6 +555,7 @@ export function buyCosmetic(id) {
     return { ok: false, reason: 'locked' };
   }
   state[slot] = id;
+  if (slot === 'armor') syncHeartsToArmorCap();
   save();
   return { ok: true, action: 'equip' };
 }

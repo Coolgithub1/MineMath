@@ -69,6 +69,7 @@ export function createShop(root, { onClose, onEquip, onReset }) {
       { key: 'hat', title: 'Hats' },
       { key: 'cape', title: 'Capes' },
       { key: 'accessory', title: 'Extras' },
+      { key: 'armor', title: 'Armor' },
     ];
 
     slots.forEach((slot) => {
@@ -97,7 +98,13 @@ export function createShop(root, { onClose, onEquip, onReset }) {
           <div class="sword-swatch cosmetic-swatch" aria-hidden="true" style="background:${swatch}"></div>
           <div class="shop-item-info">
             <h3>${cosmetic.name}</h3>
-            <p>${owned ? (equipped ? 'Looking cool!' : 'Unlocked!') : 'Unlock by answering correctly!'}</p>
+            <p>${owned
+              ? (equipped
+                ? (cosmetic.extraHearts
+                  ? `+${cosmetic.extraHearts} hearts · Rainbow shine!`
+                  : 'Looking cool!')
+                : 'Unlocked!')
+              : 'Unlock by answering correctly!'}</p>
           </div>
           <button type="button" class="mc-btn ${cls}" ${disabled ? 'disabled' : ''}>${label}</button>
         `;

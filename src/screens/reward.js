@@ -46,7 +46,7 @@ export function createRewardScreen(root, { onUnlocked }) {
     const card = document.createElement('button');
     card.type = 'button';
     card.className = `reward-card mc-border ${type}`;
-    const kindLabel = type === 'weapon' ? 'Sword' : 'Cosmetic';
+    const kindLabel = type === 'weapon' ? 'Sword' : (item.slot === 'armor' ? 'Armor' : 'Cosmetic');
     const color = item.color || '#888';
     const tip = item.tip || item.edge || color;
 
@@ -60,11 +60,14 @@ export function createRewardScreen(root, { onUnlocked }) {
         <div class="reward-meta">${item.oneShot || !Number.isFinite(item.damage) ? '∞ ONE SHOT' : `${item.damage} damage`}</div>
       `;
     } else {
+      const meta = item.slot === 'armor' && item.extraHearts
+        ? `+${item.extraHearts} hearts · Rainbow shine!`
+        : 'Looks awesome!';
       card.innerHTML = `
         <div class="reward-badge">${kindLabel}</div>
-        <div class="sword-swatch cosmetic-swatch reward-swatch" aria-hidden="true" style="background:${color}"></div>
+        <div class="sword-swatch cosmetic-swatch reward-swatch" aria-hidden="true" style="background:${color}; box-shadow: 0 0 12px ${item.edge || color}"></div>
         <div class="reward-name">${item.name}</div>
-        <div class="reward-meta">Looks awesome!</div>
+        <div class="reward-meta">${meta}</div>
       `;
     }
 
@@ -85,7 +88,9 @@ export function createRewardScreen(root, { onUnlocked }) {
         };
         const wowMsg = result.type === 'weapon'
           ? 'Wow, you unlocked a new sword!'
-          : 'Wow, you unlocked a new cosmetic!';
+          : result.label === 'armor'
+            ? 'Wow, you unlocked RAINBOW SHINING ARMOR!'
+            : 'Wow, you unlocked a new cosmetic!';
         await showWow(wowMsg);
       }
       const done = pendingDone;

@@ -144,6 +144,172 @@ function drawCape(ctx, cape, cx, baseY, sway) {
   ctx.fillRect(cx - 18, baseY - 78, 10, 8);
 }
 
+function rainbowHex(hue, sat = 72, light = 58) {
+  const h = ((hue % 360) + 360) % 360;
+  const s = sat / 100;
+  const l = light / 100;
+  const c = (1 - Math.abs(2 * l - 1)) * s;
+  const x = c * (1 - Math.abs(((h / 60) % 2) - 1));
+  const m = l - c / 2;
+  let r = 0;
+  let g = 0;
+  let b = 0;
+  if (h < 60) [r, g, b] = [c, x, 0];
+  else if (h < 120) [r, g, b] = [x, c, 0];
+  else if (h < 180) [r, g, b] = [0, c, x];
+  else if (h < 240) [r, g, b] = [0, x, c];
+  else if (h < 300) [r, g, b] = [x, 0, c];
+  else [r, g, b] = [c, 0, x];
+  const toHex = (n) => Math.round((n + m) * 255).toString(16).padStart(2, '0');
+  return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+}
+
+function drawRainbowGlint(ctx, x, y, w, h, pulse = 0, hue = 0) {
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(x - 2, y - 2, w + 4, h + 4);
+  ctx.clip();
+  const drift = (pulse * 55 + hue * 0.2) % (w + 40);
+  for (let i = -1; i < 4; i += 1) {
+    const gx = x - 14 + drift + i * 16;
+    ctx.globalAlpha = 0.4 + pulse * 0.3;
+    ctx.strokeStyle = rainbowHex(hue + i * 40, 90, 70);
+    ctx.lineWidth = 3.5;
+    ctx.shadowColor = rainbowHex(hue + i * 40, 90, 65);
+    ctx.shadowBlur = 8;
+    ctx.beginPath();
+    ctx.moveTo(gx, y + h + 4);
+    ctx.lineTo(gx + 26, y - 4);
+    ctx.stroke();
+  }
+  // Bright white shine streak
+  ctx.globalAlpha = 0.55 + pulse * 0.25;
+  ctx.strokeStyle = '#ffffff';
+  ctx.lineWidth = 2;
+  ctx.shadowBlur = 12;
+  ctx.shadowColor = '#fff';
+  const sx = x - 8 + ((drift * 1.4) % (w + 20));
+  ctx.beginPath();
+  ctx.moveTo(sx, y + h);
+  ctx.lineTo(sx + 18, y);
+  ctx.stroke();
+  ctx.restore();
+}
+
+function drawSparkles(ctx, cx, baseY, hue, pulse) {
+  ctx.save();
+  for (let i = 0; i < 8; i += 1) {
+    const ang = (i / 8) * Math.PI * 2 + hue * 0.02;
+    const rad = 38 + Math.sin(hue * 0.05 + i) * 10 + pulse * 8;
+    const x = cx + Math.cos(ang) * rad;
+    const y = baseY - 52 + Math.sin(ang * 1.3) * 28;
+    const size = 2 + (i % 3) + pulse * 2;
+    ctx.globalAlpha = 0.55 + pulse * 0.35;
+    ctx.fillStyle = rainbowHex(hue + i * 45, 95, 68);
+    ctx.shadowColor = ctx.fillStyle;
+    ctx.shadowBlur = 10;
+    ctx.beginPath();
+    ctx.moveTo(x, y - size);
+    ctx.lineTo(x + size * 0.6, y);
+    ctx.lineTo(x, y + size);
+    ctx.lineTo(x - size * 0.6, y);
+    ctx.closePath();
+    ctx.fill();
+  }
+  ctx.restore();
+}
+
+function drawDiamondArmorSet(ctx, {
+  cx,
+  baseY,
+  headY,
+  depth,
+  legL,
+  legR,
+  armL,
+  armR,
+  swing,
+  pulse = 0,
+  hideHelmet = false,
+}) {
+  const hue = (performance.now() / 12) % 360;
+  const face = rainbowHex(hue, 78, 58);
+  const side = rainbowHex(hue + 40, 70, 42);
+  const top = rainbowHex(hue + 80, 85, 72);
+  const trim = rainbowHex(hue + 160, 90, 65);
+  const trim2 = rainbowHex(hue + 220, 90, 60);
+
+  ctx.save();
+  ctx.shadowColor = face;
+  ctx.shadowBlur = 14 + pulse * 18;
+
+  // Leggings
+  const legs = [face, side, top];
+  drawLimb(ctx, cx - 18, baseY - 36, 14, 36, depth, legs, legL, cx - 11, baseY - 36);
+  drawLimb(ctx, cx + 4, baseY - 36, 14, 36, depth, legs, legR, cx + 11, baseY - 36);
+  drawRainbowGlint(ctx, cx - 18, baseY - 36, 36, 36, pulse, hue);
+
+  // Boots
+  ctx.fillStyle = rainbowHex(hue + 30, 80, 55);
+  ctx.fillRect(cx - 20, baseY - 10, 16, 12);
+  ctx.fillRect(cx + 4, baseY - 10, 16, 12);
+  ctx.fillStyle = trim;
+  ctx.fillRect(cx - 20, baseY - 10, 16, 3);
+  ctx.fillRect(cx + 4, baseY - 10, 16, 3);
+
+  // Chestplate
+  drawBox(ctx, cx - 24, baseY - 86, 48, 52, depth + 3, face, side, top);
+  ctx.fillStyle = trim;
+  ctx.fillRect(cx - 8, baseY - 78, 16, 6);
+  ctx.fillStyle = trim2;
+  ctx.fillRect(cx - 22, baseY - 58, 10, 8);
+  ctx.fillRect(cx + 12, baseY - 58, 10, 8);
+  drawRainbowGlint(ctx, cx - 24, baseY - 86, 48, 52, pulse + 0.25, hue + 60);
+
+  // Arm guards (left)
+  drawLimb(ctx, cx - 38, baseY - 80, 14, 40, depth - 1, [trim, side, top], armL, cx - 31, baseY - 78);
+
+  // Helmet
+  if (!hideHelmet) {
+    drawBox(ctx, cx - 22, headY - 4, 44, 28, depth + 4, face, side, top);
+    ctx.fillStyle = '#111';
+    ctx.fillRect(cx - 14, headY + 10, 12, 8);
+    ctx.fillRect(cx + 4, headY + 10, 12, 8);
+    ctx.fillStyle = trim;
+    ctx.fillRect(cx - 22, headY - 4, 44, 4);
+    ctx.fillStyle = trim2;
+    ctx.fillRect(cx - 4, headY + 18, 8, 4);
+    // Visor shine
+    ctx.globalAlpha = 0.55;
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(cx - 12, headY + 11, 8, 2);
+    ctx.fillRect(cx + 6, headY + 11, 8, 2);
+    ctx.globalAlpha = 1;
+    drawRainbowGlint(ctx, cx - 22, headY - 4, 44, 28, pulse + 0.4, hue + 120);
+  }
+
+  // Rainbow aura rings
+  for (let r = 0; r < 3; r += 1) {
+    ctx.globalAlpha = 0.18 + pulse * 0.2 - r * 0.04;
+    ctx.strokeStyle = rainbowHex(hue + r * 50, 95, 62);
+    ctx.lineWidth = 3 - r * 0.5;
+    ctx.beginPath();
+    ctx.ellipse(
+      cx,
+      baseY - 50,
+      40 + pulse * 8 + r * 7,
+      56 + pulse * 6 + r * 5,
+      0,
+      0,
+      Math.PI * 2,
+    );
+    ctx.stroke();
+  }
+  ctx.restore();
+
+  drawSparkles(ctx, cx, baseY, hue, pulse);
+}
+
 function drawHat(ctx, hat, cx, headY, depth) {
   if (!hat || hat.kind === 'none') return;
   const c = hat.color || '#E8B923';
@@ -237,6 +403,9 @@ export function drawCharacter(canvas, opts) {
   const hat = cosmetics.hat;
   const cape = cosmetics.cape;
   const accessory = cosmetics.accessory;
+  const armor = cosmetics.armor;
+  const diamondArmor = armor?.kind === 'diamond_set';
+  const armorPulse = diamondArmor ? 0.45 + weaponPulse * 0.55 : 0;
 
   const {
     bob = 0,
@@ -281,16 +450,25 @@ export function drawCharacter(canvas, opts) {
 
   drawCape(ctx, cape, cx, baseY, capeSway);
 
-  const pants = [BODY.pants, BODY.pantsDark, BODY.pantsLight];
-  drawLimb(ctx, cx - 18, baseY - 36, 14, 36, depth, pants, legL, cx - 11, baseY - 36);
-  drawLimb(ctx, cx + 4, baseY - 36, 14, 36, depth, pants, legR, cx + 11, baseY - 36);
-  drawAccessory(ctx, accessory?.kind === 'boots' ? accessory : null, cx, baseY, depth);
+  if (diamondArmor) {
+    // Base limbs under armor (skin hands peek)
+    const skin = [BODY.skin, BODY.skinDark, BODY.skinLight];
+    drawLimb(ctx, cx - 18, baseY - 36, 14, 36, depth, skin, legL, cx - 11, baseY - 36);
+    drawLimb(ctx, cx + 4, baseY - 36, 14, 36, depth, skin, legR, cx + 11, baseY - 36);
+    drawBox(ctx, cx - 22, baseY - 84, 44, 48, depth + 2, BODY.shirt, BODY.shirtDark, BODY.shirtLight);
+    drawLimb(ctx, cx - 36, baseY - 80, 12, 40, depth - 2, skin, armL, cx - 30, baseY - 78);
+  } else {
+    const pants = [BODY.pants, BODY.pantsDark, BODY.pantsLight];
+    drawLimb(ctx, cx - 18, baseY - 36, 14, 36, depth, pants, legL, cx - 11, baseY - 36);
+    drawLimb(ctx, cx + 4, baseY - 36, 14, 36, depth, pants, legR, cx + 11, baseY - 36);
+    drawAccessory(ctx, accessory?.kind === 'boots' ? accessory : null, cx, baseY, depth);
 
-  drawBox(ctx, cx - 22, baseY - 84, 44, 48, depth + 2, BODY.shirt, BODY.shirtDark, BODY.shirtLight);
-  drawAccessory(ctx, accessory?.kind === 'backpack' ? accessory : null, cx, baseY, depth);
+    drawBox(ctx, cx - 22, baseY - 84, 44, 48, depth + 2, BODY.shirt, BODY.shirtDark, BODY.shirtLight);
+    drawAccessory(ctx, accessory?.kind === 'backpack' ? accessory : null, cx, baseY, depth);
 
-  const skin = [BODY.skin, BODY.skinDark, BODY.skinLight];
-  drawLimb(ctx, cx - 36, baseY - 80, 12, 40, depth - 2, skin, armL, cx - 30, baseY - 78);
+    const skin = [BODY.skin, BODY.skinDark, BODY.skinLight];
+    drawLimb(ctx, cx - 36, baseY - 80, 12, 40, depth - 2, skin, armL, cx - 30, baseY - 78);
+  }
 
   const headY = baseY - 124 + headBob;
   ctx.save();
@@ -298,7 +476,7 @@ export function drawCharacter(canvas, opts) {
   ctx.rotate(headTilt);
   ctx.translate(-cx, -(headY + 20));
 
-  const hideFace = hat?.kind === 'pumpkin';
+  const hideFace = hat?.kind === 'pumpkin' && !diamondArmor;
   if (!hideFace) {
     drawBox(ctx, cx - 20, headY, 40, 40, depth + 4, BODY.skin, BODY.skinDark, BODY.skinLight);
     ctx.fillStyle = BODY.hair;
@@ -306,7 +484,7 @@ export function drawCharacter(canvas, opts) {
     ctx.fillRect(cx - 20, headY + 10, 8, 14);
     ctx.fillRect(cx + 12, headY + 10, 8, 14);
 
-    if (hat?.kind !== 'shades') {
+    if (hat?.kind !== 'shades' || diamondArmor) {
       const eyeH = eyesSquint > 0.5 ? 3 : 8;
       const eyeY = headY + 18 + (eyesSquint > 0.5 ? 3 : 0);
       ctx.fillStyle = '#fff';
@@ -340,17 +518,41 @@ export function drawCharacter(canvas, opts) {
     }
   }
 
-  drawHat(ctx, hat, cx, headY, depth);
+  if (!diamondArmor) drawHat(ctx, hat, cx, headY, depth);
   ctx.restore();
 
-  drawAccessory(
-    ctx,
-    accessory?.kind === 'parrot' ? accessory : null,
-    cx,
-    baseY,
-    depth,
-    Math.sin(headBob) * 2,
-  );
+  if (diamondArmor) {
+    drawDiamondArmorSet(ctx, {
+      cx,
+      baseY,
+      headY,
+      depth,
+      legL,
+      legR,
+      armL,
+      armR,
+      swing,
+      pulse: armorPulse,
+      hideHelmet: false,
+    });
+    drawAccessory(
+      ctx,
+      accessory?.kind === 'parrot' ? accessory : null,
+      cx,
+      baseY,
+      depth,
+      Math.sin(headBob) * 2,
+    );
+  } else {
+    drawAccessory(
+      ctx,
+      accessory?.kind === 'parrot' ? accessory : null,
+      cx,
+      baseY,
+      depth,
+      Math.sin(headBob) * 2,
+    );
+  }
 
   // Weapon arm
   ctx.save();
@@ -359,7 +561,16 @@ export function drawCharacter(canvas, opts) {
   ctx.translate(armX + 6, armY + 8);
   ctx.rotate(-0.35 + swing + armR);
   ctx.translate(-(armX + 6), -(armY + 8));
-  drawBox(ctx, armX, armY, 12, 40, depth - 2, BODY.skin, BODY.skinDark, BODY.skinLight);
+  if (diamondArmor) {
+    const hue = (performance.now() / 12) % 360;
+    const face = rainbowHex(hue, 78, 58);
+    const side = rainbowHex(hue + 40, 70, 42);
+    const top = rainbowHex(hue + 80, 85, 72);
+    drawBox(ctx, armX - 1, armY, 14, 40, depth - 1, face, side, top);
+    drawRainbowGlint(ctx, armX - 1, armY, 14, 40, armorPulse, hue + 90);
+  } else {
+    drawBox(ctx, armX, armY, 12, 40, depth - 2, BODY.skin, BODY.skinDark, BODY.skinLight);
+  }
   drawWeapon(ctx, sword, armX + 6, armY + 8, -0.9, weaponPulse);
   ctx.restore();
 
@@ -605,9 +816,12 @@ export function createCharacterAnimator(canvas, getLoadoutFn) {
     } else {
       pose = idlePose(idleMode, t, phase);
       weaponPulse = Math.max(0, weaponPulse - 0.06);
-      // Soft idle shimmer on glow weapons
-      const { sword: idleSword } = loadout();
+      // Soft idle shimmer on glow weapons / enchanted armor
+      const { sword: idleSword, cosmetics: idleCos } = loadout();
       if (idleSword?.glow) weaponPulse = 0.25 + Math.sin(t * 6) * 0.15;
+      if (idleCos?.armor?.glow) {
+        weaponPulse = Math.max(weaponPulse, 0.55 + Math.sin(t * 7) * 0.3);
+      }
     }
 
     const { sword, cosmetics } = loadout();
