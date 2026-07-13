@@ -96,16 +96,35 @@ function drawWeapon(ctx, weapon, ox, oy, angle, pulse = 0) {
     ctx.fillStyle = edge;
     ctx.fillRect(-1, -46, 2, 50);
   } else if (style === 'staff') {
-    ctx.fillStyle = tip;
+    const rainbow = weapon.id === 'op_rainbow_staff';
+    const hue = rainbow ? (performance.now() / 8) % 360 : 0;
+    const rh = (h, sat = 80, light = 55) => `hsl(${((h % 360) + 360) % 360} ${sat}% ${light}%)`;
+    const shaft = rainbow ? rh(hue + 40, 55, 35) : tip;
+    const orb = rainbow ? rh(hue, 90, 55) : blade;
+    const core = rainbow ? rh(hue + 120, 95, 70) : edge;
+    if (rainbow) {
+      ctx.shadowColor = orb;
+      ctx.shadowBlur = 18 + pulse * 14;
+    }
+    ctx.fillStyle = shaft;
     ctx.fillRect(-3, -20, 6, 55);
-    ctx.fillStyle = blade;
+    ctx.fillStyle = orb;
     ctx.beginPath();
-    ctx.arc(0, -28, 12, 0, Math.PI * 2);
+    ctx.arc(0, -28, rainbow ? 14 : 12, 0, Math.PI * 2);
     ctx.fill();
-    ctx.fillStyle = edge;
+    ctx.fillStyle = core;
     ctx.beginPath();
     ctx.arc(0, -28, 6 + pulse * 3, 0, Math.PI * 2);
     ctx.fill();
+    if (rainbow) {
+      for (let i = 0; i < 6; i += 1) {
+        const a = (i / 6) * Math.PI * 2 + performance.now() / 180;
+        ctx.fillStyle = rh(hue + i * 50, 95, 65);
+        ctx.beginPath();
+        ctx.arc(Math.cos(a) * 18, -28 + Math.sin(a) * 18, 2.5, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
   } else {
     ctx.fillStyle = '#5C3A1E';
     ctx.fillRect(-4, 18, 8, 22);

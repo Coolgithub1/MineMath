@@ -32,6 +32,19 @@ export const WEAPONS = [
     oneShot: true,
     cheat: true,
   },
+  {
+    id: 'op_rainbow_staff',
+    name: 'OP Rainbow Staff',
+    cost: 0,
+    color: '#7B5CFF',
+    edge: '#FFE566',
+    tip: '#FF4D6D',
+    damage: Infinity,
+    style: 'staff',
+    glow: true,
+    oneShot: true,
+    cheat: true,
+  },
 ];
 
 /** Back-compat alias */
@@ -779,6 +792,17 @@ export function equipSword(id) {
 /** Instant unlock + equip the OP one-shot rainbow sword. */
 export function equipOpRainbowSword() {
   const id = 'op_rainbow';
+  const weapon = WEAPONS.find((w) => w.id === id);
+  if (!weapon) return { ok: false };
+  if (!state.ownedWeapons.includes(id)) state.ownedWeapons.push(id);
+  state.equipped = id;
+  save();
+  return { ok: true, item: weapon };
+}
+
+/** Instant unlock + equip the OP one-shot rainbow staff. */
+export function equipOpRainbowStaff() {
+  const id = 'op_rainbow_staff';
   const weapon = WEAPONS.find((w) => w.id === id);
   if (!weapon) return { ok: false };
   if (!state.ownedWeapons.includes(id)) state.ownedWeapons.push(id);

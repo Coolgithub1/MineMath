@@ -7,6 +7,7 @@ import {
   toggleMute,
   resetProgress,
   equipOpRainbowSword,
+  equipOpRainbowStaff,
   equipOpRainbowArmor,
   startBossBattle,
   startOpRainbowDragonBattle,
@@ -78,6 +79,9 @@ app.innerHTML = `
       </button>
       <button type="button" class="mc-btn op-rainbow-btn" id="op-sword-btn" title="Equip the OP Rainbow Sword — one-shot every mob!">
         <span class="op-rainbow-label">🌈 OP SWORD</span>
+      </button>
+      <button type="button" class="mc-btn op-rainbow-btn op-staff-btn" id="op-staff-btn" title="Equip the OP Rainbow Staff — infinite damage bolt!">
+        <span class="op-rainbow-label">🪄 OP STAFF</span>
       </button>
       <button type="button" class="mc-btn op-rainbow-btn op-rainbow-btn--armor" id="op-armor-btn" title="Equip Rainbow Shining Armor — +3 hearts forever!">
         <span class="op-rainbow-label">🛡️ OP ARMOR</span>
@@ -415,6 +419,29 @@ app.querySelector('#op-sword-btn').addEventListener('click', async () => {
   const feedback = app.querySelector('#feedback');
   if (feedback) {
     feedback.textContent = '🌈 OP Rainbow Sword equipped — ONE SHOT every mob!!';
+    feedback.className = 'feedback bonus';
+  }
+});
+
+app.querySelector('#op-staff-btn').addEventListener('click', async () => {
+  await unlockAudio();
+  playClick();
+  const result = equipOpRainbowStaff();
+  if (!result.ok) return;
+  playEquip();
+  playPartyPop();
+  animator.equipFlash();
+  animator.redraw();
+  syncHud(app);
+  celebrateCorrect({ streak: getState().streak || 1 });
+  burstFromEl(app.querySelector('#character-canvas'), {
+    count: 30,
+    kinds: ['star', 'spark', 'diamond', 'heart', 'emerald'],
+    spread: 155,
+  });
+  const feedback = app.querySelector('#feedback');
+  if (feedback) {
+    feedback.textContent = '🪄 OP Rainbow Staff equipped — INFINITE DAMAGE bolts!!';
     feedback.className = 'feedback bonus';
   }
 });

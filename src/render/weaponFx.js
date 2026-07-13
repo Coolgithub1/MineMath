@@ -18,10 +18,12 @@ export function weaponFxProfile(weapon) {
   const e = weapon?.edge || c;
   const t = weapon?.tip || c;
 
-  if (id === 'op_rainbow' || weapon?.oneShot) {
+  if (id === 'op_rainbow' || id === 'op_rainbow_staff' || weapon?.oneShot) {
     return {
       colors: ['#FF4D6D', '#FF8C20', '#FFE566', '#7DFFB0', '#6EB5FF', '#C9B6FF', '#fff'],
-      shapes: ['star', 'orb', 'spark', 'diamond'],
+      shapes: id === 'op_rainbow_staff' || style === 'staff'
+        ? ['orb', 'star', 'spark', 'diamond']
+        : ['star', 'orb', 'spark', 'diamond'],
       glow: true,
       gravity: -0.1,
       speed: 1.8,
