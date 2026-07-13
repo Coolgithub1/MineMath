@@ -3,11 +3,11 @@ import {
   setCustomEquations,
   resetCustomEquations,
 } from '../game/state.js';
-import { formatEquation, parseEquation } from '../game/math.js';
+import { formatEquation, parseEquation, computeAnswer } from '../game/math.js';
 import { playClick } from '../game/audio.js';
 
 /**
- * Overlay to add / remove custom math equations.
+ * Overlay to add / remove custom math equations (___ ± x = y).
  * @param {HTMLElement} root
  * @param {{ onChange?: () => void }} hooks
  */
@@ -15,8 +15,8 @@ export function createQuestionsEditor(root, hooks = {}) {
   const overlay = root.querySelector('#questions-overlay');
   const listEl = root.querySelector('#questions-list');
   const form = root.querySelector('#questions-form');
-  const aInput = root.querySelector('#q-a');
-  const bInput = root.querySelector('#q-b');
+  const xInput = root.querySelector('#q-x');
+  const yInput = root.querySelector('#q-y');
   const opSelect = root.querySelector('#q-op');
   const msgEl = root.querySelector('#questions-msg');
   const countEl = root.querySelector('#questions-count');
@@ -41,8 +41,9 @@ export function createQuestionsEditor(root, hooks = {}) {
     eqs.forEach((eq, index) => {
       const row = document.createElement('div');
       row.className = 'question-row mc-border';
+      const blank = computeAnswer(eq);
       row.innerHTML = `
-        <span class="question-row-text">${formatEquation(eq)} = ${eq.op === '-' ? eq.a - eq.b : eq.a + eq.b}</span>
+        <span class="question-row-text">${formatEquation(eq)} <em>(blank = ${blank})</em></span>
         <button type="button" class="mc-btn danger question-remove" data-index="${index}" aria-label="Remove equation">Remove</button>
       `;
       listEl.appendChild(row);
@@ -68,26 +69,26 @@ export function createQuestionsEditor(root, hooks = {}) {
   form?.addEventListener('submit', (e) => {
     e.preventDefault();
     playClick();
-    const parsed = parseEquation(aInput.value, bInput.value, opSelect.value);
+    const parsed = parseEquation(xInput.value, yInput.value, opSelect.value);
     if (!parsed.ok) {
       setMsg(parsed.reason, true);
       return;
     }
     const eqs = getCustomEquations();
     const dup = eqs.some(
-      (eq) => eq.a === parsed.equation.a && eq.b === parsed.equation.b && (eq.op || '+') === parsed.equation.op,
+      (eq) => eq.x === parsed.equation.x && eq.y === parsed.equation.y && (eq.op || '+') === parsed.equation.op,
     );
     if (dup) {
       setMsg('That equation is already in the list.', true);
       return;
     }
     setCustomEquations([...eqs, parsed.equation]);
-    aInput.value = '';
-    bInput.value = '';
+    xInput.value = '';
+    yInput.value = '';
     setMsg(`Added ${formatEquation(parsed.equation)}!`);
     render();
     hooks.onChange?.();
-    aInput.focus();
+    xInput.focus();
   });
 
   root.querySelector('#questions-close')?.addEventListener('click', () => close());
@@ -109,7 +110,7 @@ export function createQuestionsEditor(root, hooks = {}) {
     render();
     overlay?.classList.add('open');
     overlay?.setAttribute('aria-hidden', 'false');
-    aInput?.focus();
+    xInput?.focus();
   }
 
   function close() {

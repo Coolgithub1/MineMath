@@ -132,10 +132,10 @@ app.innerHTML = `
     <section class="play-panel">
       <div class="stage-chip mc-border" id="stage-chip">Your Equations</div>
       <div class="question-board mc-border">
-        <p class="question-text" id="question-text">1 + 1 = ?</p>
+        <p class="question-text" id="question-text">___ + 23 = 38</p>
       </div>
       <div class="feedback" id="feedback" aria-live="polite"></div>
-      <p class="answers-label">Type your answer:</p>
+      <p class="answers-label">What goes in the blank?</p>
       <form class="answer-form" id="answer-form" autocomplete="off">
         <input
           id="answer-input"
@@ -145,7 +145,7 @@ app.innerHTML = `
           pattern="-?[0-9]*"
           maxlength="5"
           enterkeyhint="done"
-          aria-label="Type the answer"
+          aria-label="Type the missing number"
           placeholder="?"
         />
         <button type="submit" class="mc-btn primary answer-submit" id="answer-submit">Check</button>
@@ -203,15 +203,13 @@ app.innerHTML = `
         <button type="button" class="mc-btn" id="questions-close">Close</button>
       </div>
       <p class="questions-intro">
-        Add or remove the equations the game asks. It cycles through your list in order.
+        Make equations like <strong>___ + x = y</strong>. Enter <strong>x</strong> and <strong>y</strong> —
+        the child solves for the blank. Cycles through your list in order.
         You have <strong id="questions-count">0</strong> equations.
       </p>
       <div class="questions-list" id="questions-list"></div>
       <form class="questions-form" id="questions-form">
-        <label class="questions-field">
-          <span>First</span>
-          <input id="q-a" class="answer-input questions-num" type="text" inputmode="numeric" maxlength="4" placeholder="15" required />
-        </label>
+        <span class="questions-blank-label" aria-hidden="true">___</span>
         <label class="questions-field">
           <span>Op</span>
           <select id="q-op" class="questions-op" aria-label="Add or subtract">
@@ -220,8 +218,13 @@ app.innerHTML = `
           </select>
         </label>
         <label class="questions-field">
-          <span>Second</span>
-          <input id="q-b" class="answer-input questions-num" type="text" inputmode="numeric" maxlength="4" placeholder="23" required />
+          <span>x</span>
+          <input id="q-x" class="answer-input questions-num" type="text" inputmode="numeric" maxlength="4" placeholder="23" required />
+        </label>
+        <span class="questions-eq-sign" aria-hidden="true">=</span>
+        <label class="questions-field">
+          <span>y</span>
+          <input id="q-y" class="answer-input questions-num" type="text" inputmode="numeric" maxlength="4" placeholder="38" required />
         </label>
         <button type="submit" class="mc-btn primary">Add</button>
       </form>

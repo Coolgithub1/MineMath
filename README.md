@@ -10,8 +10,8 @@ Solve custom addition and subtraction equations, charge into voxel mobs, unlock 
 
 ## How to play
 
-1. Read the equation on the board.
-2. Type the answer and press **Check**.
+1. Read the equation on the board (like `___ + 23 = 38`).
+2. Type the missing number and press **Check**.
 3. **Correct** → you charge the mob, deal damage, celebrate, and pick a reward.
 4. **Wrong** → the mob fights back (unique counters per mob type) and you lose a heart.
 
@@ -24,7 +24,8 @@ Keep answering to build streaks, defeat tougher mobs, unlock gear, and collect s
 ### Custom math questions
 
 - Edit your own equation list with the **Questions** button.
-- Add **addition** (`+`) or **subtraction** (`−`) problems.
+- Add problems in the form **`___ + x = y`** (or `___ − x = y`) by entering **x** and **y**.
+- The child solves for the blank.
 - Remove equations you don’t want, or **Restore Starter List**.
 - The game cycles through your list in order (starts with 19 starter additions).
 - Your custom list is kept even if you Restart or start a New Game.

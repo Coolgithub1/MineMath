@@ -108,7 +108,7 @@ export function createPlayScreen(root, hooks) {
   function renderQuestion() {
     const eqs = getCustomEquations();
     question = generateQuestion(eqs, getEquationIndex());
-    questionEl.textContent = `${formatEquation(question)} = ?`;
+    questionEl.textContent = formatEquation(question);
     popQuestion();
     stageEl.textContent = stageLabel(question.stage, question.total);
     const s = getState();
@@ -116,7 +116,7 @@ export function createPlayScreen(root, hooks) {
     if (s.doubleHitCharges > 0) buffs.push('💥 Double Hit ready');
     if (s.shieldCharges > 0) buffs.push('🛡 Shield ready');
     setFeedback(
-      `Solve it to smash the mob and unlock cool loot!${buffs.length ? ` · ${buffs.join(' · ')}` : ''}`,
+      `Find the missing number!${buffs.length ? ` · ${buffs.join(' · ')}` : ''}`,
     );
     setInputState('');
     answerInput.value = '';

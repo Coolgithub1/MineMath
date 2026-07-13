@@ -127,7 +127,7 @@ function applyMobDamage(currentHearts, damage, oneShot) {
   return Number(next);
 }
 
-/** @type {{ a: number, b: number, op: '+'|'-' }[]} */
+/** @type {{ x: number, y: number, op: '+'|'-' }[]} */
 const DEFAULT_EQUATIONS_SEED = DEFAULT_EQUATIONS;
 
 const DEFAULT_STATE = {
@@ -185,12 +185,29 @@ function normalizeEquations(raw) {
   return raw
     .map((e) => {
       if (Array.isArray(e) && e.length >= 2) {
-        return { a: Number(e[0]), b: Number(e[1]), op: '+' };
+        // Prefer [x, y] blank form; migrate old [a, b] as ___ + b = a+b
+        if (e.length >= 3 && (e[2] === 'x' || e[2] === 'blank')) {
+          return { x: Number(e[0]), y: Number(e[1]), op: '+' };
+        }
+        const a = Number(e[0]);
+        const b = Number(e[1]);
+        if (!Number.isFinite(a) || !Number.isFinite(b)) return null;
+        // Legacy pairs were a + b = ? → blank form
+        return { x: b, y: a + b, op: '+' };
+      }
+      if (Number.isFinite(Number(e?.x)) && Number.isFinite(Number(e?.y))) {
+        return {
+          x: Number(e.x),
+          y: Number(e.y),
+          op: e?.op === '-' ? '-' : '+',
+        };
       }
       const a = Number(e?.a);
       const b = Number(e?.b);
       if (!Number.isFinite(a) || !Number.isFinite(b)) return null;
-      return { a, b, op: e?.op === '-' ? '-' : '+' };
+      const op = e?.op === '-' ? '-' : '+';
+      if (op === '+') return { x: b, y: a + b, op: '+' };
+      return { x: b, y: a - b, op: '-' };
     })
     .filter(Boolean);
 }
@@ -331,7 +348,11 @@ export function resetCustomEquations() {
 
 export function addCustomEquation(equation) {
   const list = getCustomEquations();
-  list.push({ a: equation.a, b: equation.b, op: equation.op === '-' ? '-' : '+' });
+  list.push({
+    x: Number(equation.x),
+    y: Number(equation.y),
+    op: equation.op === '-' ? '-' : '+',
+  });
   return setCustomEquations(list);
 }
 

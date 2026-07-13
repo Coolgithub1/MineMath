@@ -1862,6 +1862,15 @@ body {
   margin-bottom: 0.35rem;
 }
 
+.questions-blank-label,
+.questions-eq-sign {
+  font-weight: 900;
+  font-size: 1.35rem;
+  line-height: 2.4rem;
+  padding-bottom: 0.05rem;
+  color: #1a1a1a;
+}
+
 .questions-field {
   display: flex;
   flex-direction: column;

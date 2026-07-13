@@ -1,28 +1,28 @@
-/** Default practice set — used until the player edits their own list. */
+/** Default practice set — blank + x = y (child solves for ___). */
 export const DEFAULT_EQUATIONS = [
-  { a: 15, b: 23, op: '+' },
-  { a: 10, b: 36, op: '+' },
-  { a: 24, b: 11, op: '+' },
-  { a: 71, b: 18, op: '+' },
-  { a: 30, b: 59, op: '+' },
-  { a: 42, b: 36, op: '+' },
-  { a: 14, b: 21, op: '+' },
-  { a: 28, b: 60, op: '+' },
-  { a: 22, b: 71, op: '+' },
-  { a: 31, b: 16, op: '+' },
-  { a: 79, b: 10, op: '+' },
-  { a: 72, b: 3, op: '+' },
-  { a: 1, b: 13, op: '+' },
-  { a: 60, b: 12, op: '+' },
-  { a: 66, b: 48, op: '+' },
-  { a: 11, b: 67, op: '+' },
-  { a: 9, b: 80, op: '+' },
-  { a: 15, b: 73, op: '+' },
-  { a: 60, b: 14, op: '+' },
+  { x: 23, y: 38, op: '+' },
+  { x: 36, y: 46, op: '+' },
+  { x: 11, y: 35, op: '+' },
+  { x: 18, y: 89, op: '+' },
+  { x: 59, y: 89, op: '+' },
+  { x: 36, y: 78, op: '+' },
+  { x: 21, y: 35, op: '+' },
+  { x: 60, y: 88, op: '+' },
+  { x: 71, y: 93, op: '+' },
+  { x: 16, y: 47, op: '+' },
+  { x: 10, y: 89, op: '+' },
+  { x: 3, y: 75, op: '+' },
+  { x: 13, y: 14, op: '+' },
+  { x: 12, y: 72, op: '+' },
+  { x: 48, y: 114, op: '+' },
+  { x: 67, y: 78, op: '+' },
+  { x: 80, y: 89, op: '+' },
+  { x: 73, y: 88, op: '+' },
+  { x: 14, y: 74, op: '+' },
 ];
 
 /** @deprecated use DEFAULT_EQUATIONS */
-export const STARTER_EQUATIONS = DEFAULT_EQUATIONS.map((e) => [e.a, e.b]);
+export const STARTER_EQUATIONS = DEFAULT_EQUATIONS.map((e) => [e.x, e.y]);
 
 function randInt(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
@@ -38,43 +38,75 @@ function shuffle(arr) {
 }
 
 /**
- * @param {{ a: number, b: number, op?: '+'|'-' }} eq
+ * Convert legacy { a, b, op } (a ± b = ?) into blank form { x, y, op }.
+ * @param {{ a?: number, b?: number, x?: number, y?: number, op?: string }} e
+ * @returns {{ x: number, y: number, op: '+'|'-' } | null}
  */
-export function computeAnswer(eq) {
-  const a = Number(eq.a);
-  const b = Number(eq.b);
-  return eq.op === '-' ? a - b : a + b;
+export function toBlankEquation(e) {
+  if (!e || typeof e !== 'object') return null;
+  const op = e.op === '-' ? '-' : '+';
+
+  if (Number.isFinite(Number(e.x)) && Number.isFinite(Number(e.y))) {
+    const x = Number(e.x);
+    const y = Number(e.y);
+    if (!Number.isInteger(x) || !Number.isInteger(y)) return null;
+    return { x, y, op };
+  }
+
+  // Legacy: a + b = ?  →  ___ + b = (a+b), blank = a
+  // Legacy: a − b = ?  →  ___ − b = (a−b), blank = a
+  const a = Number(e.a);
+  const b = Number(e.b);
+  if (!Number.isFinite(a) || !Number.isFinite(b)) return null;
+  if (!Number.isInteger(a) || !Number.isInteger(b)) return null;
+  if (op === '+') return { x: b, y: a + b, op: '+' };
+  return { x: b, y: a - b, op: '-' };
 }
 
 /**
- * @param {{ a: number, b: number, op?: '+'|'-' }} eq
+ * Answer for ___ ± x = y
+ * @param {{ x: number, y: number, op?: '+'|'-' }} eq
+ */
+export function computeAnswer(eq) {
+  const x = Number(eq.x);
+  const y = Number(eq.y);
+  return eq.op === '-' ? y + x : y - x;
+}
+
+/**
+ * Display as ___ + x = y (no answer shown).
+ * @param {{ x: number, y: number, op?: '+'|'-' }} eq
  */
 export function formatEquation(eq) {
   const op = eq.op === '-' ? '−' : '+';
-  return `${eq.a} ${op} ${eq.b}`;
+  return `___ ${op} ${eq.x} = ${eq.y}`;
 }
 
 /**
- * Normalize / validate a user-entered equation.
- * @returns {{ ok: true, equation: { a: number, b: number, op: '+'|'-' } } | { ok: false, reason: string }}
+ * Normalize / validate parent-entered x and y for ___ ± x = y.
+ * @returns {{ ok: true, equation: { x: number, y: number, op: '+'|'-' } } | { ok: false, reason: string }}
  */
-export function parseEquation(aRaw, bRaw, opRaw = '+') {
-  const a = Number(aRaw);
-  const b = Number(bRaw);
+export function parseEquation(xRaw, yRaw, opRaw = '+') {
+  const x = Number(xRaw);
+  const y = Number(yRaw);
   const op = opRaw === '-' ? '-' : '+';
-  if (!Number.isFinite(a) || !Number.isFinite(b)) {
-    return { ok: false, reason: 'Enter two numbers.' };
+  if (!Number.isFinite(x) || !Number.isFinite(y)) {
+    return { ok: false, reason: 'Enter x and y.' };
   }
-  if (!Number.isInteger(a) || !Number.isInteger(b)) {
+  if (!Number.isInteger(x) || !Number.isInteger(y)) {
     return { ok: false, reason: 'Use whole numbers only.' };
   }
-  if (a < 0 || b < 0 || a > 9999 || b > 9999) {
+  if (x < 0 || y < 0 || x > 9999 || y > 9999) {
     return { ok: false, reason: 'Use numbers from 0 to 9999.' };
   }
-  if (op === '-' && a < b) {
-    return { ok: false, reason: 'For subtract, the first number should be bigger (or equal).' };
+  if (op === '+' && y < x) {
+    return { ok: false, reason: 'For __ + x = y, y must be at least as big as x.' };
   }
-  return { ok: true, equation: { a, b, op } };
+  const answer = op === '-' ? y + x : y - x;
+  if (answer < 0 || answer > 9999) {
+    return { ok: false, reason: 'The blank would be outside 0–9999.' };
+  }
+  return { ok: true, equation: { x, y, op } };
 }
 
 function makeDistractors(answer) {
@@ -98,25 +130,24 @@ function makeDistractors(answer) {
 
 /**
  * Pick the next equation from the player's custom list.
- * @param {{ a: number, b: number, op?: '+'|'-' }[]} equations
+ * @param {{ x?: number, y?: number, a?: number, b?: number, op?: '+'|'-' }[]} equations
  * @param {number} index
- * @returns {{ a: number, b: number, op: '+'|'-', answer: number, choices: number[], stage: number, index: number, total: number }}
  */
 export function generateQuestion(equations, index = 0) {
   const list = Array.isArray(equations) && equations.length
     ? equations
     : DEFAULT_EQUATIONS;
   const i = ((index % list.length) + list.length) % list.length;
-  const eq = list[i];
+  const eq = toBlankEquation(list[i]) || DEFAULT_EQUATIONS[0];
   const op = eq.op === '-' ? '-' : '+';
-  const a = Number(eq.a);
-  const b = Number(eq.b);
-  const answer = computeAnswer({ a, b, op });
+  const x = Number(eq.x);
+  const y = Number(eq.y);
+  const answer = computeAnswer({ x, y, op });
   const wrongs = makeDistractors(answer).slice(0, 3);
   const choices = shuffle([answer, ...wrongs]);
   return {
-    a,
-    b,
+    x,
+    y,
     op,
     answer,
     choices,
