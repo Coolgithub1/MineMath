@@ -669,38 +669,81 @@ function drawBlaze(ctx, cx, baseY, depth, hurt, pose) {
   ctx.fillRect(cx - 4, headY + 24, 10, 4);
 }
 
-function drawWither(ctx, cx, baseY, depth, hurt, pose) {
-  const bone = hurt ? '#5a3030' : '#2A2A2A';
+function drawWither(ctx, cx, baseY, depth, hurt, pose, shiny = false) {
+  const hue = shiny ? (performance.now() / 9) % 360 : 0;
+  const rh = (h, sat = 75, light = 48) => {
+    const s = Math.max(0, Math.min(100, sat));
+    const l = Math.max(0, Math.min(100, light));
+    return `hsl(${((h % 360) + 360) % 360} ${s}% ${l}%)`;
+  };
+  const bone = hurt
+    ? '#5a3030'
+    : shiny
+      ? rh(hue, 35, 22)
+      : '#2A2A2A';
+  const side = shiny ? rh(hue + 40, 50, 12) : '#111';
+  const top = shiny ? rh(hue + 90, 85, 58) : '#4A4A4A';
+  const eye = shiny ? rh(hue + 200, 95, 65) : '#E74C3C';
   const {
     armL = 0, armR = 0, headTilt = 0, headBob = 0, expression = 'angry',
   } = pose;
+
+  if (shiny) {
+    ctx.save();
+    ctx.shadowColor = rh(hue, 95, 60);
+    ctx.shadowBlur = 26;
+    for (let i = 0; i < 12; i += 1) {
+      const a = (i / 12) * Math.PI * 2 + performance.now() / 200;
+      const r = 58 + Math.sin(performance.now() / 160 + i) * 8;
+      ctx.fillStyle = rh(hue + i * 30, 95, 65);
+      ctx.beginPath();
+      ctx.arc(cx + Math.cos(a) * r, baseY - 100 + Math.sin(a) * r * 0.45, 3 + (i % 3), 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+
   // Three heads
   const heads = [-36, 0, 36];
   heads.forEach((ox, i) => {
     const hy = baseY - 130 + headBob + (i === 1 ? -8 : 0);
-    drawBox(ctx, cx + ox - 16, hy, 32, 32, depth + 2, bone, '#111', '#4A4A4A');
-    ctx.fillStyle = '#E74C3C';
-    ctx.shadowColor = '#ff3030';
-    ctx.shadowBlur = 8;
+    if (shiny) {
+      ctx.shadowColor = eye;
+      ctx.shadowBlur = 16;
+    }
+    drawBox(ctx, cx + ox - 16, hy, 32, 32, depth + 2, bone, side, top);
+    ctx.fillStyle = eye;
+    ctx.shadowColor = eye;
+    ctx.shadowBlur = shiny ? 14 : 8;
     ctx.fillRect(cx + ox - 10, hy + 12, 8, 6);
     ctx.fillRect(cx + ox + 4, hy + 12, 8, 6);
     ctx.shadowBlur = 0;
+    if (shiny) {
+      ctx.fillStyle = '#fff';
+      ctx.fillRect(cx + ox - 8, hy + 13, 3, 3);
+      ctx.fillRect(cx + ox + 6, hy + 13, 3, 3);
+    }
   });
   // Body spine
-  drawBox(ctx, cx - 14, baseY - 90, 28, 50, depth, bone, '#111', '#4A4A4A');
-  drawLimb(ctx, cx - 40, baseY - 85, 12, 50, depth - 2, [bone, '#111', '#4A4A4A'], armL, cx - 34, baseY - 82);
-  drawLimb(ctx, cx + 28, baseY - 85, 12, 50, depth - 2, [bone, '#111', '#4A4A4A'], armR, cx + 34, baseY - 82);
+  drawBox(ctx, cx - 14, baseY - 90, 28, 50, depth, bone, side, top);
+  drawLimb(ctx, cx - 40, baseY - 85, 12, 50, depth - 2, [bone, side, top], armL, cx - 34, baseY - 82);
+  drawLimb(ctx, cx + 28, baseY - 85, 12, 50, depth - 2, [bone, side, top], armR, cx + 34, baseY - 82);
   // Ribs
-  ctx.strokeStyle = bone;
-  ctx.lineWidth = 4;
+  ctx.strokeStyle = shiny ? rh(hue + 160, 90, 60) : bone;
+  ctx.lineWidth = shiny ? 5 : 4;
+  if (shiny) {
+    ctx.shadowColor = rh(hue + 160, 95, 65);
+    ctx.shadowBlur = 10;
+  }
   for (let i = 0; i < 3; i += 1) {
     ctx.beginPath();
     ctx.moveTo(cx - 22, baseY - 80 + i * 12);
     ctx.lineTo(cx + 22, baseY - 80 + i * 12);
     ctx.stroke();
   }
-  if (expression === 'angry') {
-    ctx.fillStyle = '#E74C3C';
+  ctx.shadowBlur = 0;
+  if (expression === 'angry' || shiny) {
+    ctx.fillStyle = eye;
     ctx.fillRect(cx - 6, baseY - 55, 12, 4);
   }
   void headTilt;
@@ -770,7 +813,8 @@ function drawMobBody(ctx, mobType, cx, baseY, depth, hurt, pose) {
   else if (mobType === 'super_warden') drawWarden(ctx, cx, baseY, depth, hurt, pose, 'super');
   else if (mobType === 'op_super_warden') drawWarden(ctx, cx, baseY, depth, hurt, pose, 'op');
   else if (mobType === 'blaze') drawBlaze(ctx, cx, baseY, depth, hurt, pose);
-  else if (mobType === 'wither') drawWither(ctx, cx, baseY, depth, hurt, pose);
+  else if (mobType === 'wither') drawWither(ctx, cx, baseY, depth, hurt, pose, false);
+  else if (mobType === 'op_shiny_wither') drawWither(ctx, cx, baseY, depth, hurt, pose, true);
   else if (mobType === 'lion') drawLion(ctx, cx, baseY, depth, hurt, pose);
   else drawZombie(ctx, cx, baseY, depth, hurt, pose);
 }

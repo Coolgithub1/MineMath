@@ -13,6 +13,7 @@ import {
   startOpRainbowDragonBattle,
   startOpRainbowSpiderBattle,
   startOpSuperWardenBattle,
+  startOpShinyWitherBattle,
   isBossMode,
 } from './game/state.js';
 import { unlockAudio, playClick, playPartyPop, startAmbient, playStreakFanfare, playParrotSquawk, setAmbientBiome, playEquip, playFart, playSillyWardenNoise } from './game/audio.js';
@@ -92,6 +93,9 @@ app.innerHTML = `
       <button type="button" class="mc-btn op-rainbow-btn warden-hud-btn" id="op-warden-hud-btn" title="Summon OP Super Warden — infinite hearts!!!">
         <span class="op-rainbow-label">🌀 OP WARDEN</span>
       </button>
+      <button type="button" class="mc-btn op-rainbow-btn wither-hud-btn" id="op-wither-hud-btn" title="Summon OP Super Shiny Wither!!!">
+        <span class="op-rainbow-label">💀 OP WITHER</span>
+      </button>
       <button type="button" class="mc-btn" id="mute-btn">Sound: On</button>
       <button type="button" class="mc-btn" id="questions-btn">Questions</button>
       <button type="button" class="mc-btn" id="sticker-btn">Stickers</button>
@@ -116,6 +120,10 @@ app.innerHTML = `
     <button type="button" class="mc-btn op-rainbow-btn boss-battle-btn boss-battle-btn--mega warden-op-btn" id="op-warden-btn" title="Summon the OP Super Warden — infinite hearts!!!">
       <span class="op-rainbow-label boss-battle-mega-label">✨🌀 OP SUPER WARDEN SPAWNER 🌀✨</span>
       <span class="boss-battle-sub">∞ INFINITE HEARTS · SUPER STRONG · SILLY DANCES · FARTS WHEN HIT!!!</span>
+    </button>
+    <button type="button" class="mc-btn op-rainbow-btn boss-battle-btn boss-battle-btn--mega wither-op-btn" id="op-wither-btn" title="Summon the OP Super Shiny Wither!!!">
+      <span class="op-rainbow-label boss-battle-mega-label">✨💀 OP SUPER SHINY WITHER 💀✨</span>
+      <span class="boss-battle-sub">666,666 SUPER SHINY HEARTS · Rainbow wither boss!!!</span>
     </button>
   </div>
 
@@ -559,6 +567,28 @@ async function summonOpSuperWarden() {
   }
 }
 
+async function summonOpShinyWither() {
+  await unlockAudio();
+  playClick();
+  playPartyPop();
+  const boss = startOpShinyWitherBattle();
+  app.querySelector('#battle-arena')?.classList.add('boss-mode', 'wither-op-mode');
+  mobAnimator.redraw();
+  syncHud(app);
+  flashArena('hit');
+  burstFromEl(app.querySelector('#mob-canvas'), {
+    count: 58,
+    kinds: ['star', 'spark', 'diamond', 'heart', 'emerald'],
+    spread: 215,
+  });
+  await showBossIntro(boss.name);
+  const feedback = app.querySelector('#feedback');
+  if (feedback) {
+    feedback.textContent = '✨💀 OP SUPER SHINY WITHER — 666,666 SUPER SHINY HEARTS!!!';
+    feedback.className = 'feedback bonus';
+  }
+}
+
 app.querySelector('#op-dragon-btn')?.addEventListener('click', summonOpRainbowDragon);
 app.querySelector('#op-dragon-hud-btn')?.addEventListener('click', summonOpRainbowDragon);
 app.querySelector('#op-spider-btn')?.addEventListener('click', summonOpRainbowSpider);
@@ -567,6 +597,8 @@ app.querySelector('#op-spider-float-btn')?.addEventListener('click', summonOpRai
 app.querySelector('#op-warden-btn')?.addEventListener('click', summonOpSuperWarden);
 app.querySelector('#op-warden-hud-btn')?.addEventListener('click', summonOpSuperWarden);
 app.querySelector('#op-warden-float-btn')?.addEventListener('click', summonOpSuperWarden);
+app.querySelector('#op-wither-btn')?.addEventListener('click', summonOpShinyWither);
+app.querySelector('#op-wither-hud-btn')?.addEventListener('click', summonOpShinyWither);
 
 app.querySelector('#sticker-btn').addEventListener('click', async () => {
   await unlockAudio();

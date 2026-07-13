@@ -326,7 +326,7 @@ export async function playBattleSequence(opts) {
       await counterZombie(ctx);
     } else if (mobType === 'enderman' || mobType === 'herobrine') {
       await counterEnderman(ctx);
-    } else if (mobType === 'skeleton' || mobType === 'wither_skel' || mobType === 'wither' || mobType === 'blaze') {
+    } else if (mobType === 'skeleton' || mobType === 'wither_skel' || mobType === 'wither' || mobType === 'op_shiny_wither' || mobType === 'blaze') {
       await counterSkeleton(ctx);
     } else if (mobType === 'spider' || mobType === 'op_rainbow_spider') {
       await counterDefault(ctx);

@@ -11,7 +11,7 @@ export const STICKERS = [
   { id: 'zombie_beat', name: 'Zombie Zapper', emoji: '🧟', desc: 'Defeat a zombie' },
   { id: 'first_sword', name: 'Sword Collector', emoji: '⚔', desc: 'Unlock a new sword' },
   { id: 'first_cosmetic', name: 'Fashion Hero', emoji: '👑', desc: 'Unlock a cosmetic' },
-  { id: 'shield_use', name: 'Safe Heart', emoji: '🛡', desc: 'Block a hit with a shield' },
+  { id: 'shield_use', name: 'Golden Bite', emoji: '🍎', desc: 'Block a hit with a Golden Apple' },
   { id: 'double_hit', name: 'Power Punch', emoji: '💪', desc: 'Land a double hit' },
   { id: 'snow_biome', name: 'Snow Day', emoji: '❄', desc: 'Reach the snow biome' },
   { id: 'nether_biome', name: 'Nether Ready', emoji: '🌋', desc: 'Reach the nether biome' },

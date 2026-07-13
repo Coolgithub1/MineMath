@@ -36,7 +36,7 @@ export function createShop(root, { onClose, onEquip, onReset }) {
       }
       const dmgLabel = weapon.oneShot || !Number.isFinite(weapon.damage)
         ? '∞ ONE SHOT'
-        : `${weapon.damage} damage`;
+        : `${weapon.damage} ATK (Minecraft)`;
       const unlockHint = weapon.cheat
         ? 'Tap the rainbow OP button!'
         : 'Unlock by answering correctly!';

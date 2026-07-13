@@ -109,10 +109,10 @@ export function showPowerUpOffer() {
             <div class="powerup-name">Double Hit</div>
             <div class="powerup-meta">Next hit does 2× damage</div>
           </button>
-          <button type="button" class="powerup-card mc-border" data-kind="shield">
-            <div class="powerup-icon">🛡</div>
-            <div class="powerup-name">Shield Heart</div>
-            <div class="powerup-meta">Block the next wrong answer</div>
+          <button type="button" class="powerup-card powerup-card--golden mc-border" data-kind="goldenApple">
+            <div class="powerup-icon">🍎</div>
+            <div class="powerup-name">Golden Apple</div>
+            <div class="powerup-meta">Super shiny — block the next wrong answer</div>
           </button>
         </div>
         <button type="button" class="mc-btn powerup-skip" data-kind="">Skip</button>

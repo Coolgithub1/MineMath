@@ -9,16 +9,17 @@ export const PLAYER_MAX_HEARTS = 5;
 /** @typedef {'sword' | 'axe' | 'trident' | 'staff'} WeaponStyle */
 
 export const WEAPONS = [
-  { id: 'wood', name: 'Wood Sword', cost: 0, color: '#8B5A2B', edge: '#C4A484', tip: '#5C3A1E', damage: 1, style: 'sword' },
-  { id: 'stone', name: 'Stone Sword', cost: 5, color: '#7A7A7A', edge: '#B0B0B0', tip: '#4A4A4A', damage: 1, style: 'sword' },
-  { id: 'iron', name: 'Iron Sword', cost: 12, color: '#C8C8C8', edge: '#F0F0F0', tip: '#888888', damage: 1, style: 'sword' },
-  { id: 'gold', name: 'Gold Sword', cost: 25, color: '#E8B923', edge: '#FFE566', tip: '#B8860B', damage: 1, style: 'sword' },
-  { id: 'diamond', name: 'Diamond Sword', cost: 50, color: '#4AEDD9', edge: '#A8FFF4', tip: '#1A9A8A', damage: 2, style: 'sword' },
-  { id: 'battle_axe', name: 'Battle Axe', cost: 65, color: '#A0A0A0', edge: '#E0E0E0', tip: '#5C3A1E', damage: 2, style: 'axe' },
-  { id: 'enchanted', name: 'Enchanted Blade', cost: 80, color: '#7B5CFF', edge: '#C9B6FF', tip: '#3D2A9A', damage: 3, style: 'sword', glow: true },
-  { id: 'netherite', name: 'Netherite Sword', cost: 110, color: '#4A3A3A', edge: '#8A7A6A', tip: '#2A1A1A', damage: 3, style: 'sword' },
-  { id: 'trident', name: 'Trident', cost: 130, color: '#5AB0C8', edge: '#A8E8F8', tip: '#2A6070', damage: 3, style: 'trident' },
-  { id: 'blaze_staff', name: 'Blaze Staff', cost: 150, color: '#FF8C20', edge: '#FFD080', tip: '#8B3A00', damage: 4, style: 'staff', glow: true },
+  // Minecraft Java melee damage (HP). OP weapons stay infinite one-shot.
+  { id: 'wood', name: 'Wood Sword', cost: 0, color: '#8B5A2B', edge: '#C4A484', tip: '#5C3A1E', damage: 4, style: 'sword' },
+  { id: 'stone', name: 'Stone Sword', cost: 5, color: '#7A7A7A', edge: '#B0B0B0', tip: '#4A4A4A', damage: 5, style: 'sword' },
+  { id: 'iron', name: 'Iron Sword', cost: 12, color: '#C8C8C8', edge: '#F0F0F0', tip: '#888888', damage: 6, style: 'sword' },
+  { id: 'gold', name: 'Gold Sword', cost: 25, color: '#E8B923', edge: '#FFE566', tip: '#B8860B', damage: 4, style: 'sword' },
+  { id: 'diamond', name: 'Diamond Sword', cost: 50, color: '#4AEDD9', edge: '#A8FFF4', tip: '#1A9A8A', damage: 7, style: 'sword' },
+  { id: 'battle_axe', name: 'Battle Axe', cost: 65, color: '#A0A0A0', edge: '#E0E0E0', tip: '#5C3A1E', damage: 9, style: 'axe' },
+  { id: 'enchanted', name: 'Enchanted Blade', cost: 80, color: '#7B5CFF', edge: '#C9B6FF', tip: '#3D2A9A', damage: 10, style: 'sword', glow: true },
+  { id: 'netherite', name: 'Netherite Sword', cost: 110, color: '#4A3A3A', edge: '#8A7A6A', tip: '#2A1A1A', damage: 8, style: 'sword' },
+  { id: 'trident', name: 'Trident', cost: 130, color: '#5AB0C8', edge: '#A8E8F8', tip: '#2A6070', damage: 9, style: 'trident' },
+  { id: 'blaze_staff', name: 'Blaze Staff', cost: 150, color: '#FF8C20', edge: '#FFD080', tip: '#8B3A00', damage: 8, style: 'staff', glow: true },
   {
     id: 'op_rainbow',
     name: 'OP Rainbow Sword',
@@ -118,6 +119,9 @@ export const OP_SUPER_WARDEN_ID = 'op_super_warden';
 /** Stored as string so JSON save/load keeps it (Infinity becomes null). */
 export const OP_SUPER_WARDEN_HEARTS = 'Infinity';
 export const OP_SUPER_WARDEN_HEARTS_LABEL = '∞ INFINITE HEARTS';
+export const OP_SHINY_WITHER_ID = 'op_shiny_wither';
+export const OP_SHINY_WITHER_HEARTS = 666_666;
+export const OP_SHINY_WITHER_HEARTS_LABEL = '666,666 SUPER SHINY HEARTS';
 
 export function getBossHordeHearts() {
   return BOSS_TYPES.reduce((sum, b) => sum + b.maxHearts, 0);
@@ -476,6 +480,16 @@ export function getMobInfo(id = state.mobType) {
       shiny: true,
     };
   }
+  if (id === OP_SHINY_WITHER_ID) {
+    return {
+      id: OP_SHINY_WITHER_ID,
+      name: 'OP SUPER SHINY WITHER',
+      maxHearts: OP_SHINY_WITHER_HEARTS,
+      heartsLabel: OP_SHINY_WITHER_HEARTS_LABEL,
+      boss: true,
+      shiny: true,
+    };
+  }
   const boss = BOSS_TYPES.find((b) => b.id === id);
   if (boss) return { ...boss, boss: true };
   return MOB_TYPES.find((m) => m.id === id) || MOB_TYPES[0];
@@ -526,6 +540,17 @@ export function startOpSuperWardenBattle() {
   return getMobInfo(OP_SUPER_WARDEN_ID);
 }
 
+/** Summon the OP Super Shiny Wither. */
+export function startOpShinyWitherBattle() {
+  state.bossMode = true;
+  state.mobType = OP_SHINY_WITHER_ID;
+  state.mobHearts = OP_SHINY_WITHER_HEARTS;
+  state.mobMaxHearts = OP_SHINY_WITHER_HEARTS;
+  state.mobScale = 2.15;
+  save();
+  return getMobInfo(OP_SHINY_WITHER_ID);
+}
+
 export function isBossMode() {
   return (
     Boolean(state.bossMode)
@@ -533,6 +558,7 @@ export function isBossMode() {
     || state.mobType === OP_RAINBOW_DRAGON_ID
     || state.mobType === OP_RAINBOW_SPIDER_ID
     || state.mobType === OP_SUPER_WARDEN_ID
+    || state.mobType === OP_SHINY_WITHER_ID
   );
 }
 
@@ -546,6 +572,10 @@ export function isOpRainbowSpider() {
 
 export function isOpSuperWarden() {
   return state.mobType === OP_SUPER_WARDEN_ID;
+}
+
+export function isOpShinyWither() {
+  return state.mobType === OP_SHINY_WITHER_ID;
 }
 
 export function getBiome() {
@@ -565,7 +595,9 @@ export function syncBiome() {
 
 export function grantPowerUp(kind) {
   if (kind === 'doubleHit') state.doubleHitCharges = (state.doubleHitCharges || 0) + 1;
-  else if (kind === 'shield') state.shieldCharges = (state.shieldCharges || 0) + 1;
+  else if (kind === 'shield' || kind === 'goldenApple') {
+    state.shieldCharges = (state.shieldCharges || 0) + 1;
+  }
   save();
   return getState();
 }
@@ -614,7 +646,8 @@ export function recordCorrect() {
     || prevMob === BOSS_HORDE_ID
     || prevMob === OP_RAINBOW_DRAGON_ID
     || prevMob === OP_RAINBOW_SPIDER_ID
-    || prevMob === OP_SUPER_WARDEN_ID;
+    || prevMob === OP_SUPER_WARDEN_ID
+    || prevMob === OP_SHINY_WITHER_ID;
   state.mobHearts = applyMobDamage(state.mobHearts, damage, oneShot);
   if (infiniteMob) {
     state.mobHearts = OP_SUPER_WARDEN_HEARTS;

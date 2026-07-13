@@ -11,8 +11,10 @@ import {
   isOpRainbowDragon,
   isOpRainbowSpider,
   isOpSuperWarden,
+  isOpShinyWither,
   OP_RAINBOW_SPIDER_HEARTS_LABEL,
   OP_SUPER_WARDEN_HEARTS_LABEL,
+  OP_SHINY_WITHER_HEARTS_LABEL,
   subscribe,
   recordCorrect,
   recordWrong,
@@ -116,7 +118,7 @@ export function createPlayScreen(root, hooks) {
     const s = getState();
     const buffs = [];
     if (s.doubleHitCharges > 0) buffs.push('💥 Double Hit ready');
-    if (s.shieldCharges > 0) buffs.push('🛡 Shield ready');
+    if (s.shieldCharges > 0) buffs.push('🍎 Golden Apple ready');
     setFeedback(
       `Find the missing number!${buffs.length ? ` · ${buffs.join(' · ')}` : ''}`,
     );
@@ -203,7 +205,9 @@ export function createPlayScreen(root, hooks) {
               ? '🌈🐉 OP RAINBOW ENDER DRAGON DEFEATED!!! UNBELIEVABLE!!!'
               : result.prevMob === 'op_rainbow_spider'
                 ? '🌈🕷️ OP RAINBOW SHINING SPIDER DEFEATED!!! LEGENDARY!!!'
-                : '⚔️ BOSS HORDE DEFEATED!!! Absolute legend!')
+                : result.prevMob === 'op_shiny_wither'
+                  ? '✨💀 OP SUPER SHINY WITHER DEFEATED!!! EPIC!!!'
+                  : '⚔️ BOSS HORDE DEFEATED!!! Absolute legend!')
             : result.oneShot
               ? `🌈 ONE SHOT!! ${mob.name} deleted! A bigger foe appears!`
               : `Mob defeated!${result.usedDoubleHit ? ' DOUBLE HIT!' : ''} A bigger ${mob.name} appears!`,
@@ -275,7 +279,7 @@ export function createPlayScreen(root, hooks) {
       if (result.shielded) {
         processStickers({ usedShield: true, biome: getState().biome });
         setFeedback(
-          `Shield blocked it! The answer was ${question.answer}.`,
+          `Golden Apple blocked it! The answer was ${question.answer}.`,
           'feedback bonus',
         );
       } else if (result.playerDefeated) {
@@ -344,7 +348,7 @@ export function syncHud(root) {
   if (powerEl) {
     const bits = [];
     if (s.doubleHitCharges > 0) bits.push(`💥×${s.doubleHitCharges}`);
-    if (s.shieldCharges > 0) bits.push(`🛡×${s.shieldCharges}`);
+    if (s.shieldCharges > 0) bits.push(`🍎×${s.shieldCharges}`);
     powerEl.textContent = bits.length ? bits.join(' ') : '';
     powerEl.classList.toggle('hidden', !bits.length);
   }
@@ -367,6 +371,8 @@ export function syncHud(root) {
   if (mobStatus) {
     if (isOpSuperWarden()) {
       mobStatus.textContent = `${OP_SUPER_WARDEN_HEARTS_LABEL} · SUPER STRONG!!!`;
+    } else if (isOpShinyWither()) {
+      mobStatus.textContent = `${OP_SHINY_WITHER_HEARTS_LABEL}`;
     } else if (isOpRainbowSpider()) {
       mobStatus.textContent = `${OP_RAINBOW_SPIDER_HEARTS_LABEL} HP`;
     } else if (isOpRainbowDragon()) {
@@ -383,9 +389,10 @@ export function syncHud(root) {
   arena?.classList.toggle('dragon-op-mode', isOpRainbowDragon());
   arena?.classList.toggle('spider-op-mode', isOpRainbowSpider());
   arena?.classList.toggle('warden-op-mode', isOpSuperWarden());
+  arena?.classList.toggle('wither-op-mode', isOpShinyWither());
 
-  renderHearts(root.querySelector('#player-hearts'), s.playerHearts, getPlayerMaxHearts(), 'heart-full');
-  const hugeBoss = isOpRainbowDragon() || isOpRainbowSpider() || isOpSuperWarden();
+  renderHearts(root.querySelector('#player-hearts'), s.playerHearts, getPlayerMaxHearts(), 'heart-full heart-shiny');
+  const hugeBoss = isOpRainbowDragon() || isOpRainbowSpider() || isOpSuperWarden() || isOpShinyWither();
   const mobHeartMax = hugeBoss ? 20 : s.mobMaxHearts;
   let mobHeartCur = s.mobHearts;
   if (isOpSuperWarden()) {
