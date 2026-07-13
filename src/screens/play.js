@@ -10,7 +10,9 @@ import {
   isBossMode,
   isOpRainbowDragon,
   isOpRainbowSpider,
+  isOpSuperWarden,
   OP_RAINBOW_SPIDER_HEARTS_LABEL,
+  OP_SUPER_WARDEN_HEARTS_LABEL,
   subscribe,
   recordCorrect,
   recordWrong,
@@ -211,7 +213,9 @@ export function createPlayScreen(root, hooks) {
         setFeedback(
           result.oneShot
             ? '🌈 ONE SHOT!! Mob deleted! Pick a prize!'
-            : `BONK! Mob lost ${result.damage} heart${result.damage > 1 ? 's' : ''}!${result.usedDoubleHit ? ' Double hit!' : ''} Pick a prize!`,
+            : isOpSuperWarden()
+              ? '💨 PFFFT!! He farted and kept dancing — ∞ hearts forever!! Pick a prize!'
+              : `BONK! Mob lost ${result.damage} heart${result.damage > 1 ? 's' : ''}!${result.usedDoubleHit ? ' Double hit!' : ''} Pick a prize!`,
           'feedback correct',
         );
       }
@@ -281,7 +285,9 @@ export function createPlayScreen(root, hooks) {
         );
       } else {
         setFeedback(
-          `Ouch! You lost a heart. The answer is ${question.answer}.`,
+          isOpSuperWarden()
+            ? `Ouch! Super Warden slammed you for 2 hearts! Answer was ${question.answer}.`
+            : `Ouch! You lost a heart. The answer is ${question.answer}.`,
           'feedback wrong',
         );
       }
@@ -359,7 +365,9 @@ export function syncHud(root) {
   if (mobName) mobName.textContent = mob.name;
   const mobStatus = root.querySelector('#mob-status');
   if (mobStatus) {
-    if (isOpRainbowSpider()) {
+    if (isOpSuperWarden()) {
+      mobStatus.textContent = `${OP_SUPER_WARDEN_HEARTS_LABEL} · SUPER STRONG!!!`;
+    } else if (isOpRainbowSpider()) {
       mobStatus.textContent = `${OP_RAINBOW_SPIDER_HEARTS_LABEL} HP`;
     } else if (isOpRainbowDragon()) {
       mobStatus.textContent = `${Number(s.mobHearts).toLocaleString()} / 1,000,000 HP`;
@@ -374,12 +382,15 @@ export function syncHud(root) {
   arena?.classList.toggle('boss-mode', isBossMode());
   arena?.classList.toggle('dragon-op-mode', isOpRainbowDragon());
   arena?.classList.toggle('spider-op-mode', isOpRainbowSpider());
+  arena?.classList.toggle('warden-op-mode', isOpSuperWarden());
 
   renderHearts(root.querySelector('#player-hearts'), s.playerHearts, getPlayerMaxHearts(), 'heart-full');
-  const hugeBoss = isOpRainbowDragon() || isOpRainbowSpider();
+  const hugeBoss = isOpRainbowDragon() || isOpRainbowSpider() || isOpSuperWarden();
   const mobHeartMax = hugeBoss ? 20 : s.mobMaxHearts;
   let mobHeartCur = s.mobHearts;
-  if (hugeBoss) {
+  if (isOpSuperWarden()) {
+    mobHeartCur = 20;
+  } else if (hugeBoss) {
     const maxB = typeof s.mobMaxHearts === 'string' ? BigInt(s.mobMaxHearts) : BigInt(s.mobMaxHearts || 1);
     const curB = typeof s.mobHearts === 'string' ? BigInt(s.mobHearts) : BigInt(s.mobHearts || 0);
     mobHeartCur = curB <= 0n ? 0 : Math.max(1, Number((curB * 20n) / (maxB <= 0n ? 1n : maxB)));

@@ -2,7 +2,10 @@
  * Canvas voxel-style Minecraft-inspired mobs with silly animations.
  */
 
+import { playSillyWardenNoise } from '../game/audio.js';
+
 const IDLE_MODES = ['dance', 'laugh', 'fight', 'bounce', 'taunt'];
+const CRAZY_IDLE_MODES = ['dance', 'laugh', 'bounce', 'taunt'];
 
 function drawBox(ctx, x, y, w, h, d, face, side, top) {
   ctx.fillStyle = face;
@@ -544,50 +547,99 @@ function drawEnderDragon(ctx, cx, baseY, depth, hurt, pose, rainbow = false) {
   }
 }
 
-function drawWarden(ctx, cx, baseY, depth, hurt, pose, superMode = false) {
-  const body = hurt ? '#3a5a6a' : (superMode ? '#0A2A4A' : '#0E2A3A');
-  const glow = superMode ? '#7DFFB0' : '#4AEDD9';
+function drawWarden(ctx, cx, baseY, depth, hurt, pose, mode = false) {
+  const opMode = mode === 'op';
+  const superMode = mode === true || mode === 'super' || opMode;
+  const hue = opMode ? (performance.now() / 8) % 360 : 0;
+  const rh = (h, sat = 75, light = 48) => {
+    const s = Math.max(0, Math.min(100, sat));
+    const l = Math.max(0, Math.min(100, light));
+    return `hsl(${((h % 360) + 360) % 360} ${s}% ${l}%)`;
+  };
+  const body = hurt
+    ? '#3a5a6a'
+    : opMode
+      ? rh(hue, 70, 28)
+      : (superMode ? '#0A2A4A' : '#0E2A3A');
+  const glow = opMode ? rh(hue + 140, 95, 62) : (superMode ? '#7DFFB0' : '#4AEDD9');
+  const side = opMode ? rh(hue + 40, 65, 18) : '#061018';
+  const top = opMode ? rh(hue + 90, 85, 55) : glow;
   const {
     legL = 0, legR = 0, armL = 0, armR = 0,
     headTilt = 0, headBob = 0, expression = 'angry',
   } = pose;
-  const thick = superMode ? 6 : 0;
-  drawLimb(ctx, cx - 22 - thick / 2, baseY - 44, 18 + thick, 44, depth, [body, '#061018', glow], legL, cx - 13, baseY - 44);
-  drawLimb(ctx, cx + 4, baseY - 44, 18 + thick, 44, depth, [body, '#061018', glow], legR, cx + 13, baseY - 44);
-  drawBox(ctx, cx - 30 - thick / 2, baseY - 110, 60 + thick, 66, depth + 4, body, '#061018', glow);
-  drawLimb(ctx, cx - 48, baseY - 100, 16, 70, depth, [body, '#061018', glow], armL, cx - 40, baseY - 98);
-  drawLimb(ctx, cx + 32, baseY - 100, 16, 70, depth, [body, '#061018', glow], armR, cx + 40, baseY - 98);
-  // Rib glow
+  const thick = opMode ? 14 : (superMode ? 6 : 0);
+  const size = opMode ? 1.12 : 1;
+
+  if (opMode) {
+    ctx.save();
+    ctx.shadowColor = glow;
+    ctx.shadowBlur = 28;
+    for (let i = 0; i < 10; i += 1) {
+      const a = (i / 10) * Math.PI * 2 + performance.now() / 220;
+      const r = 52 + Math.sin(performance.now() / 140 + i) * 10;
+      ctx.fillStyle = rh(hue + i * 36, 95, 65);
+      ctx.beginPath();
+      ctx.arc(
+        cx + Math.cos(a) * r,
+        baseY - 90 + Math.sin(a) * r * 0.55,
+        4 + (i % 3),
+        0,
+        Math.PI * 2,
+      );
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  drawLimb(ctx, cx - 22 * size - thick / 2, baseY - 44 * size, (18 + thick) * size, 44 * size, depth, [body, side, top], legL, cx - 13 * size, baseY - 44 * size);
+  drawLimb(ctx, cx + 4 * size, baseY - 44 * size, (18 + thick) * size, 44 * size, depth, [body, side, top], legR, cx + 13 * size, baseY - 44 * size);
+  drawBox(ctx, cx - 30 * size - thick / 2, baseY - 110 * size, (60 + thick) * size, 66 * size, depth + 4, body, side, top);
+  drawLimb(ctx, cx - 48 * size, baseY - 100 * size, 16 * size, 70 * size, depth, [body, side, top], armL, cx - 40 * size, baseY - 98 * size);
+  drawLimb(ctx, cx + 32 * size, baseY - 100 * size, 16 * size, 70 * size, depth, [body, side, top], armR, cx + 40 * size, baseY - 98 * size);
   ctx.fillStyle = glow;
   ctx.shadowColor = glow;
-  ctx.shadowBlur = superMode ? 18 : 10;
-  ctx.fillRect(cx - 14, baseY - 90, 8, 28);
-  ctx.fillRect(cx + 6, baseY - 90, 8, 28);
+  ctx.shadowBlur = opMode ? 26 : (superMode ? 18 : 10);
+  ctx.fillRect(cx - 14 * size, baseY - 90 * size, 8 * size, 28 * size);
+  ctx.fillRect(cx + 6 * size, baseY - 90 * size, 8 * size, 28 * size);
   if (superMode) {
-    ctx.fillRect(cx - 4, baseY - 95, 8, 36);
-    ctx.fillStyle = '#FF4D6D';
-    ctx.fillRect(cx - 18, baseY - 70, 36, 6);
+    ctx.fillRect(cx - 4 * size, baseY - 95 * size, 8 * size, 36 * size);
+    ctx.fillStyle = opMode ? rh(hue + 200, 95, 58) : '#FF4D6D';
+    ctx.fillRect(cx - 18 * size, baseY - 70 * size, 36 * size, 6 * size);
   }
   ctx.shadowBlur = 0;
-  const headY = baseY - 150 + headBob;
+  const headY = baseY - 150 * size + headBob;
   ctx.save();
-  ctx.translate(cx, headY + 20);
+  ctx.translate(cx, headY + 20 * size);
   ctx.rotate(headTilt);
-  ctx.translate(-cx, -(headY + 20));
-  drawBox(ctx, cx - 24, headY, 48, 42, depth + 3, body, '#061018', glow);
-  // Horns / ears
+  ctx.translate(-cx, -(headY + 20 * size));
+  drawBox(ctx, cx - 24 * size, headY, 48 * size, 42 * size, depth + 3, body, side, top);
   ctx.fillStyle = body;
-  ctx.fillRect(cx - 28, headY - 16, 12, 20);
-  ctx.fillRect(cx + 16, headY - 16, 12, 20);
+  ctx.fillRect(cx - 28 * size, headY - 16 * size, 12 * size, 20 * size);
+  ctx.fillRect(cx + 16 * size, headY - 16 * size, 12 * size, 20 * size);
+  if (opMode) {
+    ctx.fillStyle = rh(hue + 180, 90, 60);
+    ctx.shadowColor = glow;
+    ctx.shadowBlur = 14;
+    ctx.fillRect(cx - 30 * size, headY - 28 * size, 8 * size, 14 * size);
+    ctx.fillRect(cx + 22 * size, headY - 28 * size, 8 * size, 14 * size);
+  }
   ctx.fillStyle = glow;
   ctx.shadowColor = glow;
-  ctx.shadowBlur = 12;
-  ctx.fillRect(cx - 10, headY + 14, 8, 8);
-  ctx.fillRect(cx + 4, headY + 14, 8, 8);
+  ctx.shadowBlur = opMode ? 20 : 12;
+  ctx.fillRect(cx - 10 * size, headY + 14 * size, 8 * size, 8 * size);
+  ctx.fillRect(cx + 4 * size, headY + 14 * size, 8 * size, 8 * size);
   ctx.shadowBlur = 0;
-  if (expression === 'angry') {
+  if (expression === 'laugh' || expression === 'wow' || opMode) {
     ctx.fillStyle = '#111';
-    ctx.fillRect(cx - 8, headY + 28, 18, 4);
+    const mh = opMode ? 10 + Math.abs(Math.sin(performance.now() / 90)) * 8 : 8;
+    ctx.fillRect(cx - 10 * size, headY + 26 * size, 22 * size, mh);
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(cx - 6 * size, headY + 28 * size, 4 * size, 5 * size);
+    ctx.fillRect(cx + 4 * size, headY + 28 * size, 4 * size, 5 * size);
+  } else if (expression === 'angry') {
+    ctx.fillStyle = '#111';
+    ctx.fillRect(cx - 8 * size, headY + 28 * size, 18 * size, 4 * size);
   }
   ctx.restore();
 }
@@ -715,7 +767,8 @@ function drawMobBody(ctx, mobType, cx, baseY, depth, hurt, pose) {
   else if (mobType === 'ender_dragon') drawEnderDragon(ctx, cx, baseY, depth, hurt, pose, false);
   else if (mobType === 'op_rainbow_dragon') drawEnderDragon(ctx, cx, baseY, depth, hurt, pose, true);
   else if (mobType === 'warden') drawWarden(ctx, cx, baseY, depth, hurt, pose, false);
-  else if (mobType === 'super_warden') drawWarden(ctx, cx, baseY, depth, hurt, pose, true);
+  else if (mobType === 'super_warden') drawWarden(ctx, cx, baseY, depth, hurt, pose, 'super');
+  else if (mobType === 'op_super_warden') drawWarden(ctx, cx, baseY, depth, hurt, pose, 'op');
   else if (mobType === 'blaze') drawBlaze(ctx, cx, baseY, depth, hurt, pose);
   else if (mobType === 'wither') drawWither(ctx, cx, baseY, depth, hurt, pose);
   else if (mobType === 'lion') drawLion(ctx, cx, baseY, depth, hurt, pose);
@@ -837,9 +890,28 @@ export function drawMob(canvas, opts) {
   }
 }
 
-function pickIdleMode(exclude) {
-  const pool = IDLE_MODES.filter((m) => m !== exclude);
-  return pool[Math.floor(Math.random() * pool.length)];
+function pickIdleMode(exclude, crazy = false) {
+  const pool = (crazy ? CRAZY_IDLE_MODES : IDLE_MODES).filter((m) => m !== exclude);
+  return pool[Math.floor(Math.random() * pool.length)] || 'dance';
+}
+
+function amplifyCrazyPose(p, t) {
+  return {
+    ...p,
+    bob: (p.bob || 0) * 2.2 + Math.sin(t * 17) * 6,
+    lean: (p.lean || 0) * 1.8 + Math.sin(t * 11) * 0.25,
+    jump: Math.max(p.jump || 0, 0) * 1.6 + Math.abs(Math.sin(t * 9)) * 10,
+    armL: (p.armL || 0) * 1.5 + Math.sin(t * 13) * 0.5,
+    armR: (p.armR || 0) * 1.5 - Math.sin(t * 14) * 0.5,
+    legL: (p.legL || 0) * 1.4,
+    legR: (p.legR || 0) * 1.4,
+    headTilt: (p.headTilt || 0) * 1.6 + Math.sin(t * 15) * 0.35,
+    spin: Math.sin(t * 6) * 0.18,
+    mouthOpen: Math.max(p.mouthOpen || 0, 0.55 + Math.sin(t * 20) * 0.35),
+    expression: 'laugh',
+    squash: 1 + Math.sin(t * 16) * 0.12,
+    stretch: 1 - Math.sin(t * 16) * 0.1,
+  };
 }
 
 function idlePose(mode, t, phase) {
@@ -911,6 +983,7 @@ export function createMobAnimator(canvas, getMobFn) {
   let modeUntil = 2.2;
   let action = null;
   let phase = Math.random() * 10;
+  let nextSillySound = 1.2;
 
   function startAction(type, dur = 0.55) {
     action = { type, t0: performance.now(), dur };
@@ -920,11 +993,18 @@ export function createMobAnimator(canvas, getMobFn) {
     const t = (now - t0) / 1000;
     hurt = Math.max(0, hurt - 0.05);
     shake = hurt > 0 ? Math.sin(now / 30) * 6 : 0;
+    const mobSnap = getMobFn();
+    const crazy = mobSnap.mobType === 'op_super_warden';
 
     if (t > modeUntil && !action) {
-      idleMode = pickIdleMode(idleMode);
-      modeUntil = t + 2 + Math.random() * 2.8;
+      idleMode = pickIdleMode(idleMode, crazy);
+      modeUntil = t + (crazy ? 0.7 + Math.random() * 1.1 : 2 + Math.random() * 2.8);
       phase = Math.random() * 10;
+    }
+
+    if (crazy && t > nextSillySound && !action) {
+      playSillyWardenNoise();
+      nextSillySound = t + 0.9 + Math.random() * 1.6;
     }
 
     if (action) {
@@ -1031,13 +1111,14 @@ export function createMobAnimator(canvas, getMobFn) {
       }
     } else if (!pose.exploded) {
       pose = idlePose(idleMode, t, phase);
+      if (crazy) pose = amplifyCrazyPose(pose, t);
       // Keep bow visible on skeletons during idle
-      if (getMobFn().mobType === 'skeleton' || getMobFn().mobType === 'wither_skel') {
+      if (mobSnap.mobType === 'skeleton' || mobSnap.mobType === 'wither_skel') {
         pose.bowDraw = 0.15;
       }
     }
 
-    const { mobType, scale } = getMobFn();
+    const { mobType, scale } = mobSnap;
     drawMob(canvas, { mobType, pose, hurt, shake, scale });
     raf = requestAnimationFrame(frame);
   }
@@ -1047,7 +1128,8 @@ export function createMobAnimator(canvas, getMobFn) {
       cancelAnimationFrame(raf);
       t0 = performance.now();
       modeUntil = 2.2;
-      idleMode = 'taunt';
+      idleMode = 'dance';
+      nextSillySound = 0.4;
       pose = {};
       raf = requestAnimationFrame(frame);
     },

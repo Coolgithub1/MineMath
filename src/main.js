@@ -11,9 +11,10 @@ import {
   startBossBattle,
   startOpRainbowDragonBattle,
   startOpRainbowSpiderBattle,
+  startOpSuperWardenBattle,
   isBossMode,
 } from './game/state.js';
-import { unlockAudio, playClick, playPartyPop, startAmbient, playStreakFanfare, playParrotSquawk, setAmbientBiome, playEquip } from './game/audio.js';
+import { unlockAudio, playClick, playPartyPop, startAmbient, playStreakFanfare, playParrotSquawk, setAmbientBiome, playEquip, playFart, playSillyWardenNoise } from './game/audio.js';
 import { createCharacterAnimator } from './render/character.js';
 import { createMobAnimator } from './render/mob.js';
 import { createPlayScreen, syncHud } from './screens/play.js';
@@ -72,6 +73,9 @@ app.innerHTML = `
       </div>
     </div>
     <div class="hud-actions">
+      <button type="button" class="mc-btn op-rainbow-btn warden-hud-btn" id="op-warden-hud-btn" title="Summon OP Super Warden — infinite hearts!!!">
+        <span class="op-rainbow-label">🌀 OP WARDEN</span>
+      </button>
       <button type="button" class="mc-btn op-rainbow-btn spider-hud-btn" id="op-spider-hud-btn" title="Summon OP Rainbow Shining Spider — billion thousand hearts!!!">
         <span class="op-rainbow-label">🕷️ OP SPIDER</span>
       </button>
@@ -93,6 +97,10 @@ app.innerHTML = `
   </header>
 
   <div class="boss-battle-bar">
+    <button type="button" class="mc-btn op-rainbow-btn boss-battle-btn boss-battle-btn--mega warden-op-btn" id="op-warden-btn" title="Summon the OP Super Warden — infinite hearts!!!">
+      <span class="op-rainbow-label boss-battle-mega-label">✨🌀 OP SUPER WARDEN SPAWNER 🌀✨</span>
+      <span class="boss-battle-sub">∞ INFINITE HEARTS · SUPER STRONG · SILLY DANCES · FARTS WHEN HIT!!!</span>
+    </button>
     <button type="button" class="mc-btn op-rainbow-btn boss-battle-btn boss-battle-btn--mega spider-op-btn" id="op-spider-btn" title="Summon the OP Rainbow Shining Spider!!!">
       <span class="op-rainbow-label boss-battle-mega-label">🌈🕷️ OP RAINBOW SHINING SPIDER 🕷️🌈</span>
       <span class="boss-battle-sub">1 BILLION THOUSAND BILLION THOUSAND BILLION THOUSAND BILLION THOUSAND HEARTS!!!</span>
@@ -109,6 +117,9 @@ app.innerHTML = `
 
   <button type="button" class="mc-btn op-rainbow-btn floating-spider-btn" id="op-spider-float-btn" title="Summon OP Rainbow Shining Spider!!!">
     <span class="op-rainbow-label">🕷️ OP SPIDER</span>
+  </button>
+  <button type="button" class="mc-btn op-rainbow-btn floating-warden-btn" id="op-warden-float-btn" title="Summon OP Super Warden!!!">
+    <span class="op-rainbow-label">🌀 OP WARDEN</span>
   </button>
 
   <div class="battle-arena mc-border" id="battle-arena">
@@ -282,6 +293,10 @@ const play = createPlayScreen(app, {
       onPlayerHitMob() {
         mobAnimator.takeHit();
         flashArena('hit');
+        if (getState().mobType === 'op_super_warden') {
+          playFart();
+          playSillyWardenNoise();
+        }
         burstFromEl(app.querySelector('#mob-canvas'), {
           count: 16,
           kinds: ['spark', 'star', 'diamond'],
@@ -494,11 +509,38 @@ async function summonOpRainbowSpider() {
   }
 }
 
+async function summonOpSuperWarden() {
+  await unlockAudio();
+  playClick();
+  playPartyPop();
+  playSillyWardenNoise();
+  playFart();
+  const boss = startOpSuperWardenBattle();
+  app.querySelector('#battle-arena')?.classList.add('boss-mode', 'warden-op-mode');
+  mobAnimator.redraw();
+  syncHud(app);
+  flashArena('hit');
+  burstFromEl(app.querySelector('#mob-canvas'), {
+    count: 60,
+    kinds: ['star', 'spark', 'diamond', 'heart', 'emerald'],
+    spread: 220,
+  });
+  await showBossIntro(boss.name);
+  const feedback = app.querySelector('#feedback');
+  if (feedback) {
+    feedback.textContent = '✨🌀 OP SUPER WARDEN — ∞ INFINITE HEARTS · HE DANCES · HE FARTS · UNSTOPPABLE!!!';
+    feedback.className = 'feedback bonus';
+  }
+}
+
 app.querySelector('#op-dragon-btn')?.addEventListener('click', summonOpRainbowDragon);
 app.querySelector('#op-dragon-hud-btn')?.addEventListener('click', summonOpRainbowDragon);
 app.querySelector('#op-spider-btn')?.addEventListener('click', summonOpRainbowSpider);
 app.querySelector('#op-spider-hud-btn')?.addEventListener('click', summonOpRainbowSpider);
 app.querySelector('#op-spider-float-btn')?.addEventListener('click', summonOpRainbowSpider);
+app.querySelector('#op-warden-btn')?.addEventListener('click', summonOpSuperWarden);
+app.querySelector('#op-warden-hud-btn')?.addEventListener('click', summonOpSuperWarden);
+app.querySelector('#op-warden-float-btn')?.addEventListener('click', summonOpSuperWarden);
 
 app.querySelector('#sticker-btn').addEventListener('click', async () => {
   await unlockAudio();

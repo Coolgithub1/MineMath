@@ -101,12 +101,21 @@ export const OP_RAINBOW_SPIDER_ID = 'op_rainbow_spider';
 export const OP_RAINBOW_SPIDER_HEARTS = `1${'0'.repeat(48)}`;
 export const OP_RAINBOW_SPIDER_HEARTS_LABEL =
   '1 BILLION THOUSAND BILLION THOUSAND BILLION THOUSAND BILLION THOUSAND';
+export const OP_SUPER_WARDEN_ID = 'op_super_warden';
+/** Stored as string so JSON save/load keeps it (Infinity becomes null). */
+export const OP_SUPER_WARDEN_HEARTS = 'Infinity';
+export const OP_SUPER_WARDEN_HEARTS_LABEL = '∞ INFINITE HEARTS';
 
 export function getBossHordeHearts() {
   return BOSS_TYPES.reduce((sum, b) => sum + b.maxHearts, 0);
 }
 
+export function isInfiniteHearts(v) {
+  return v === Infinity || v === 'Infinity' || v === '∞';
+}
+
 export function heartsToBigInt(v) {
+  if (isInfiniteHearts(v)) return 10n ** 100n;
   if (typeof v === 'bigint') return v;
   if (typeof v === 'string' && /^\d+$/.test(v)) return BigInt(v);
   const n = Number(v);
@@ -115,10 +124,12 @@ export function heartsToBigInt(v) {
 }
 
 export function formatHugeHearts(v) {
+  if (isInfiniteHearts(v)) return '∞';
   return heartsToBigInt(v).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 }
 
 function applyMobDamage(currentHearts, damage, oneShot) {
+  if (isInfiniteHearts(currentHearts)) return OP_SUPER_WARDEN_HEARTS;
   const cur = heartsToBigInt(currentHearts);
   if (oneShot || damage === currentHearts) return 0;
   const next = cur - heartsToBigInt(damage);
@@ -259,6 +270,13 @@ function loadRaw() {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return { ...DEFAULT_STATE, ...pickMob(0, 2) };
     const parsed = migrate(JSON.parse(raw));
+    if (parsed.mobType === OP_SUPER_WARDEN_ID || isInfiniteHearts(parsed.mobHearts) || isInfiniteHearts(parsed.mobMaxHearts)) {
+      parsed.mobType = OP_SUPER_WARDEN_ID;
+      parsed.mobHearts = OP_SUPER_WARDEN_HEARTS;
+      parsed.mobMaxHearts = OP_SUPER_WARDEN_HEARTS;
+      parsed.bossMode = true;
+      if (parsed.mobScale == null || parsed.mobScale < 2) parsed.mobScale = 2.45;
+    }
     if (!parsed.mobType || parsed.mobHearts == null) {
       Object.assign(parsed, pickMob(parsed.mobsDefeated || 0, parsed.mathTier || 2));
     }
@@ -434,6 +452,17 @@ export function getMobInfo(id = state.mobType) {
       rainbow: true,
     };
   }
+  if (id === OP_SUPER_WARDEN_ID) {
+    return {
+      id: OP_SUPER_WARDEN_ID,
+      name: 'OP SUPER WARDEN',
+      maxHearts: OP_SUPER_WARDEN_HEARTS,
+      heartsLabel: OP_SUPER_WARDEN_HEARTS_LABEL,
+      boss: true,
+      infinite: true,
+      shiny: true,
+    };
+  }
   const boss = BOSS_TYPES.find((b) => b.id === id);
   if (boss) return { ...boss, boss: true };
   return MOB_TYPES.find((m) => m.id === id) || MOB_TYPES[0];
@@ -473,12 +502,24 @@ export function startOpRainbowSpiderBattle() {
   return getMobInfo(OP_RAINBOW_SPIDER_ID);
 }
 
+/** Summon the OP Super Warden — infinite hearts, unstoppable silly tank. */
+export function startOpSuperWardenBattle() {
+  state.bossMode = true;
+  state.mobType = OP_SUPER_WARDEN_ID;
+  state.mobHearts = OP_SUPER_WARDEN_HEARTS;
+  state.mobMaxHearts = OP_SUPER_WARDEN_HEARTS;
+  state.mobScale = 2.45;
+  save();
+  return getMobInfo(OP_SUPER_WARDEN_ID);
+}
+
 export function isBossMode() {
   return (
     Boolean(state.bossMode)
     || state.mobType === BOSS_HORDE_ID
     || state.mobType === OP_RAINBOW_DRAGON_ID
     || state.mobType === OP_RAINBOW_SPIDER_ID
+    || state.mobType === OP_SUPER_WARDEN_ID
   );
 }
 
@@ -488,6 +529,10 @@ export function isOpRainbowDragon() {
 
 export function isOpRainbowSpider() {
   return state.mobType === OP_RAINBOW_SPIDER_ID;
+}
+
+export function isOpSuperWarden() {
+  return state.mobType === OP_SUPER_WARDEN_ID;
 }
 
 export function getBiome() {
@@ -541,7 +586,8 @@ export function recordCorrect() {
 
   let damage = getWeapon().damage || 1;
   let usedDoubleHit = false;
-  let oneShot = Boolean(getWeapon().oneShot) || !Number.isFinite(damage);
+  const infiniteMob = state.mobType === OP_SUPER_WARDEN_ID || isInfiniteHearts(state.mobHearts);
+  let oneShot = !infiniteMob && (Boolean(getWeapon().oneShot) || !Number.isFinite(damage));
   if (oneShot) {
     damage = state.mobHearts; // wipe all remaining hearts
   } else if ((state.doubleHitCharges || 0) > 0) {
@@ -554,9 +600,14 @@ export function recordCorrect() {
   const wasBoss = Boolean(state.bossMode)
     || prevMob === BOSS_HORDE_ID
     || prevMob === OP_RAINBOW_DRAGON_ID
-    || prevMob === OP_RAINBOW_SPIDER_ID;
+    || prevMob === OP_RAINBOW_SPIDER_ID
+    || prevMob === OP_SUPER_WARDEN_ID;
   state.mobHearts = applyMobDamage(state.mobHearts, damage, oneShot);
-  const mobDefeated = heartsToBigInt(state.mobHearts) <= 0n;
+  if (infiniteMob) {
+    state.mobHearts = OP_SUPER_WARDEN_HEARTS;
+    state.mobMaxHearts = OP_SUPER_WARDEN_HEARTS;
+  }
+  const mobDefeated = !infiniteMob && heartsToBigInt(state.mobHearts) <= 0n;
   let newMobIntro = false;
 
   if (mobDefeated) {
@@ -599,11 +650,13 @@ export function recordCorrect() {
 export function recordWrong() {
   state.streak = 0;
   let shielded = false;
+  // OP Super Warden hits hard — 2 hearts (still blocked by one shield charge)
+  const hitPower = state.mobType === OP_SUPER_WARDEN_ID ? 2 : 1;
   if ((state.shieldCharges || 0) > 0) {
     state.shieldCharges -= 1;
     shielded = true;
   } else {
-    state.playerHearts = Math.max(0, state.playerHearts - 1);
+    state.playerHearts = Math.max(0, state.playerHearts - hitPower);
   }
   const playerDefeated = !shielded && state.playerHearts <= 0;
   if (playerDefeated) {

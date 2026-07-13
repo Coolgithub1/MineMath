@@ -147,6 +147,63 @@ export function playHit() {
   tone({ freq: 160, type: 'square', duration: 0.1, gain: 0.06, slideTo: 80 });
 }
 
+/** Classic goofy wet fart for OP Super Warden hits */
+export function playFart() {
+  if (!canPlay()) return;
+  const c = ctx;
+  const t0 = c.currentTime;
+  const duration = 0.42;
+  const bufferSize = Math.floor(c.sampleRate * duration);
+  const buffer = c.createBuffer(1, bufferSize, c.sampleRate);
+  const data = buffer.getChannelData(0);
+  for (let i = 0; i < bufferSize; i += 1) {
+    const p = i / bufferSize;
+    const wobble = Math.sin(p * Math.PI * 18 + Math.sin(p * 40) * 2);
+    data[i] = (Math.random() * 2 - 1) * (1 - p) * 0.7 + wobble * 0.15 * (1 - p);
+  }
+  const src = c.createBufferSource();
+  src.buffer = buffer;
+  const filter = c.createBiquadFilter();
+  filter.type = 'lowpass';
+  filter.frequency.setValueAtTime(280, t0);
+  filter.frequency.exponentialRampToValueAtTime(70, t0 + duration);
+  filter.Q.value = 2.2;
+  const g = c.createGain();
+  g.gain.setValueAtTime(0.0001, t0);
+  g.gain.exponentialRampToValueAtTime(0.16, t0 + 0.04);
+  g.gain.exponentialRampToValueAtTime(0.1, t0 + 0.18);
+  g.gain.exponentialRampToValueAtTime(0.0001, t0 + duration);
+  src.connect(filter);
+  filter.connect(g);
+  g.connect(c.destination);
+  src.start(t0);
+  src.stop(t0 + duration + 0.02);
+  tone({ freq: 95, type: 'sawtooth', duration: 0.28, gain: 0.07, slideTo: 38 });
+  tone({ freq: 140, type: 'square', duration: 0.12, gain: 0.04, delay: 0.08, slideTo: 55 });
+  noiseBurst({ duration: 0.18, gain: 0.05, delay: 0.12 });
+}
+
+/** Goofy honks / boings / giggles while OP Super Warden dances */
+export function playSillyWardenNoise() {
+  const pick = Math.floor(Math.random() * 4);
+  if (pick === 0) {
+    tone({ freq: 180, type: 'square', duration: 0.12, gain: 0.07, slideTo: 420 });
+    tone({ freq: 320, type: 'sawtooth', duration: 0.14, gain: 0.05, delay: 0.08, slideTo: 160 });
+  } else if (pick === 1) {
+    tone({ freq: 90, type: 'sawtooth', duration: 0.2, gain: 0.08, slideTo: 60 });
+    tone({ freq: 700, type: 'square', duration: 0.08, gain: 0.05, delay: 0.12, slideTo: 1100 });
+    noiseBurst({ duration: 0.1, gain: 0.035, delay: 0.05 });
+  } else if (pick === 2) {
+    [220, 280, 200, 340].forEach((f, i) => {
+      tone({ freq: f, type: 'triangle', duration: 0.09, gain: 0.055, delay: i * 0.07, slideTo: f * 1.4 });
+    });
+  } else {
+    tone({ freq: 520, type: 'square', duration: 0.07, gain: 0.06, slideTo: 180 });
+    tone({ freq: 160, type: 'sawtooth', duration: 0.16, gain: 0.06, delay: 0.06, slideTo: 90 });
+    noiseBurst({ duration: 0.12, gain: 0.04, delay: 0.1 });
+  }
+}
+
 export function playWhoosh() {
   noiseBurst({ duration: 0.14, gain: 0.045 });
   tone({ freq: 280, type: 'triangle', duration: 0.16, gain: 0.04, slideTo: 140 });
