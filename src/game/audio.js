@@ -1,4 +1,5 @@
 import { getState } from './state.js';
+import fartUrl from '../assets/apebble-fart-4-228244.mp3';
 
 let ctx = null;
 
@@ -147,40 +148,16 @@ export function playHit() {
   tone({ freq: 160, type: 'square', duration: 0.1, gain: 0.06, slideTo: 80 });
 }
 
-/** Classic goofy wet fart for OP Super Warden hits */
+/** Real fart sample — plays on every mob hit */
 export function playFart() {
-  if (!canPlay()) return;
-  const c = ctx;
-  const t0 = c.currentTime;
-  const duration = 0.42;
-  const bufferSize = Math.floor(c.sampleRate * duration);
-  const buffer = c.createBuffer(1, bufferSize, c.sampleRate);
-  const data = buffer.getChannelData(0);
-  for (let i = 0; i < bufferSize; i += 1) {
-    const p = i / bufferSize;
-    const wobble = Math.sin(p * Math.PI * 18 + Math.sin(p * 40) * 2);
-    data[i] = (Math.random() * 2 - 1) * (1 - p) * 0.7 + wobble * 0.15 * (1 - p);
+  if (getState().muted) return;
+  try {
+    const a = new Audio(fartUrl);
+    a.volume = 0.85;
+    a.play().catch(() => {});
+  } catch {
+    /* ignore autoplay / decode issues */
   }
-  const src = c.createBufferSource();
-  src.buffer = buffer;
-  const filter = c.createBiquadFilter();
-  filter.type = 'lowpass';
-  filter.frequency.setValueAtTime(280, t0);
-  filter.frequency.exponentialRampToValueAtTime(70, t0 + duration);
-  filter.Q.value = 2.2;
-  const g = c.createGain();
-  g.gain.setValueAtTime(0.0001, t0);
-  g.gain.exponentialRampToValueAtTime(0.16, t0 + 0.04);
-  g.gain.exponentialRampToValueAtTime(0.1, t0 + 0.18);
-  g.gain.exponentialRampToValueAtTime(0.0001, t0 + duration);
-  src.connect(filter);
-  filter.connect(g);
-  g.connect(c.destination);
-  src.start(t0);
-  src.stop(t0 + duration + 0.02);
-  tone({ freq: 95, type: 'sawtooth', duration: 0.28, gain: 0.07, slideTo: 38 });
-  tone({ freq: 140, type: 'square', duration: 0.12, gain: 0.04, delay: 0.08, slideTo: 55 });
-  noiseBurst({ duration: 0.18, gain: 0.05, delay: 0.12 });
 }
 
 /** Goofy honks / boings / giggles while OP Super Warden dances */

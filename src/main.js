@@ -73,9 +73,6 @@ app.innerHTML = `
       </div>
     </div>
     <div class="hud-actions">
-      <button type="button" class="mc-btn op-rainbow-btn warden-hud-btn" id="op-warden-hud-btn" title="Summon OP Super Warden — infinite hearts!!!">
-        <span class="op-rainbow-label">🌀 OP WARDEN</span>
-      </button>
       <button type="button" class="mc-btn op-rainbow-btn spider-hud-btn" id="op-spider-hud-btn" title="Summon OP Rainbow Shining Spider — billion thousand hearts!!!">
         <span class="op-rainbow-label">🕷️ OP SPIDER</span>
       </button>
@@ -88,6 +85,9 @@ app.innerHTML = `
       <button type="button" class="mc-btn op-rainbow-btn dragon-hud-btn" id="op-dragon-hud-btn" title="Summon OP Rainbow Ender Dragon — 1,000,000 hearts!!!">
         <span class="op-rainbow-label">🐉 OP DRAGON</span>
       </button>
+      <button type="button" class="mc-btn op-rainbow-btn warden-hud-btn" id="op-warden-hud-btn" title="Summon OP Super Warden — infinite hearts!!!">
+        <span class="op-rainbow-label">🌀 OP WARDEN</span>
+      </button>
       <button type="button" class="mc-btn" id="mute-btn">Sound: On</button>
       <button type="button" class="mc-btn" id="questions-btn">Questions</button>
       <button type="button" class="mc-btn" id="sticker-btn">Stickers</button>
@@ -97,10 +97,6 @@ app.innerHTML = `
   </header>
 
   <div class="boss-battle-bar">
-    <button type="button" class="mc-btn op-rainbow-btn boss-battle-btn boss-battle-btn--mega warden-op-btn" id="op-warden-btn" title="Summon the OP Super Warden — infinite hearts!!!">
-      <span class="op-rainbow-label boss-battle-mega-label">✨🌀 OP SUPER WARDEN SPAWNER 🌀✨</span>
-      <span class="boss-battle-sub">∞ INFINITE HEARTS · SUPER STRONG · SILLY DANCES · FARTS WHEN HIT!!!</span>
-    </button>
     <button type="button" class="mc-btn op-rainbow-btn boss-battle-btn boss-battle-btn--mega spider-op-btn" id="op-spider-btn" title="Summon the OP Rainbow Shining Spider!!!">
       <span class="op-rainbow-label boss-battle-mega-label">🌈🕷️ OP RAINBOW SHINING SPIDER 🕷️🌈</span>
       <span class="boss-battle-sub">1 BILLION THOUSAND BILLION THOUSAND BILLION THOUSAND BILLION THOUSAND HEARTS!!!</span>
@@ -112,6 +108,10 @@ app.innerHTML = `
     <button type="button" class="mc-btn op-rainbow-btn boss-battle-btn boss-battle-btn--mega dragon-op-btn" id="op-dragon-btn" title="Summon the OP Rainbow Ender Dragon — 1,000,000 hearts!!!">
       <span class="op-rainbow-label boss-battle-mega-label">🌈🐉 OP RAINBOW ENDER DRAGON 🐉🌈</span>
       <span class="boss-battle-sub">1,000,000 HEARTS · Ultimate dragon battle!!!</span>
+    </button>
+    <button type="button" class="mc-btn op-rainbow-btn boss-battle-btn boss-battle-btn--mega warden-op-btn" id="op-warden-btn" title="Summon the OP Super Warden — infinite hearts!!!">
+      <span class="op-rainbow-label boss-battle-mega-label">✨🌀 OP SUPER WARDEN SPAWNER 🌀✨</span>
+      <span class="boss-battle-sub">∞ INFINITE HEARTS · SUPER STRONG · SILLY DANCES · FARTS WHEN HIT!!!</span>
     </button>
   </div>
 
@@ -294,7 +294,6 @@ const play = createPlayScreen(app, {
         mobAnimator.takeHit();
         flashArena('hit');
         if (getState().mobType === 'op_super_warden') {
-          playFart();
           playSillyWardenNoise();
         }
         burstFromEl(app.querySelector('#mob-canvas'), {

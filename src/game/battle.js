@@ -1,6 +1,7 @@
 import { getSword, getState } from './state.js';
 import {
   playHit,
+  playFart,
   playHurt,
   playWhoosh,
   playBolt,
@@ -296,11 +297,13 @@ export async function playBattleSequence(opts) {
       playBolt();
       await shootBolt(playerCanvas, mobCanvas, weapon);
       playHit();
+      playFart();
       onPlayerHitMob?.();
     } else {
       animator.attack();
       await wait(160);
       playHit();
+      playFart();
       spawnWeaponHitParticles(mobCanvas, weapon, 28);
       onPlayerHitMob?.();
       await wait(120);
